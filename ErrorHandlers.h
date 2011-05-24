@@ -41,10 +41,10 @@ private:
 
 public:
     void HandleError (const wstring& sBriefDescription,
-                             const wstring& sLocation,
-		                     const wstring& sDetailedDescription = L"",
-                             int iErrCode = -1,
-                             bool bWrite = false) 
+                      const wstring& sLocation,
+                      const wstring& sDetailedDescription = L"",
+                      int iErrCode = -1,
+                      bool bWrite = false) 
     {
         wstring sFormattedMsg = sFormat (sBriefDescription, 
                                          sLocation, 
@@ -258,4 +258,3 @@ private:
                 wstring (_T("\t")) + io__.str() + wstring (_T("\t")) + wstring (_T(__FUNCTION__)); \
                 CError * pError = CError::pGetInstance(); \
                 pError->HandleError (sMsg__, sLocation__); 
-//            CError::HandleError (sMsg__, sLocation__); 
