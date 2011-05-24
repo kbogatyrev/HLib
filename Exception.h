@@ -1,16 +1,18 @@
 #pragma once
 
-//#include "stdafx.h"
+#include "stdafx.h"
 
 class CException
 {
+
+    static const unsigned int cuiMaxTextLength = 5000;
 
 public:
     enum EException;
 
 protected:
     int m_iErrorCode;
-    std::wstring m_sDescription;
+    wchar_t m_arrDescription[cuiMaxTextLength+1];
 
 public:
 
@@ -23,9 +25,12 @@ public:
         m_iErrorCode = -1;
     };
 
-    CException (int iErrorCode, const std::wstring& sDescription)
-        : m_iErrorCode (iErrorCode), m_sDescription (sDescription)
-    {}
+    CException (int iErrorCode, wchar_t * szDescription)
+        : m_iErrorCode (iErrorCode)
+    {
+        int iLength = min (wcslen (szDescription), cuiMaxTextLength);
+        memmove_s (m_arrDescription, cuiMaxTextLength, szDescription, iLength);                
+    }
 
     virtual ~CException() {};
 
@@ -34,9 +39,9 @@ public:
     {
         return m_iErrorCode;
     }
-    wstring sGetDescription()
+    wchar_t * szGetDescription()
     {
-        return m_sDescription;
+        return m_arrDescription;
     }
 
 };
