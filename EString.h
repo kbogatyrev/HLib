@@ -93,6 +93,80 @@ struct StToken
 
 };	// struct StToken
 
+struct StBreakChars
+{
+    const wchar_t * m_szDefault;
+    wchar_t m_szVolatile[cuiMaxSeparatorLength_];
+
+    StBreakChars() : m_szDefault (szDefaultBreakChars_) {}
+};
+
+struct StTabs
+{
+    const wchar_t * m_szDefault;
+    wchar_t m_szVolatile[cuiMaxSeparatorLength_];
+
+    StTabs() : m_szDefault (szDefaultTabs_) {}
+};
+
+struct StPunctuation
+{
+    const wchar_t * m_szDefault;
+    wchar_t m_szVolatile[cuiMaxSeparatorLength_];
+
+    StPunctuation() : m_szDefault (szDefaultPunctuation_) {}
+};
+
+struct StEscape
+{
+    const wchar_t * m_szDefault;
+    wchar_t m_szVolatile[cuiMaxSeparatorLength_];
+
+    StEscape() : m_szDefault (szDefaultEscapeChars_) {}
+};
+
+template<typename SeparatorPolicy>
+class CSeparators : public SeparatorPolicy
+{
+public:
+    CSeparators()
+    {
+        m_szVolatile[0] = L'\0';
+    }
+
+    void Set (const wchar_t * szSeparators)
+    {
+        unsigned int uiLength = wcslen (szSeparators);
+        if (uiLength > cuiMaxSeparatorLength_)
+        {
+            wchar_t * szMsg = L"Separator string too long.";
+            ERROR_LOG (szMsg);
+            throw CException (E_INVALIDARG, szMsg);
+        }
+
+        if (0 == uiLength)
+        {
+            wchar_t * szMsg = L"Empty separator string.";
+            ERROR_LOG (szMsg);
+            throw CException (E_INVALIDARG, szMsg);
+        }
+
+        errno_t error = wmemcpy_s (m_szVolatile, cuiMaxSeparatorLength_, szSeparators, uiLength);
+	    if (error)
+	    {
+            wchar_t * szMsg = L"wmemcpy_s error.";
+            ERROR_LOG (szMsg);
+            throw CException (error, szMsg);
+	    }
+    
+    }   //  void Set (...)
+
+    const wchar_t * szGet()
+    {
+        return m_szVolatile[0] ? m_szVolatile : m_szDefault;
+    }
+};
+
 class  CEString
 {
 
@@ -107,7 +181,13 @@ private:
     unsigned int m_uiBlocksAllocated;
 
 	wchar_t m_szVowels[cuiMaxVowelsLength_];
-    wchar_t m_szBreakChars[cuiMaxSeparatorLength_];
+//    wchar_t m_szBreakChars[cuiMaxSeparatorLength_];
+    
+    CSeparators<StBreakChars> m_Breaks;
+    CSeparators<StTabs> m_Tabs;
+    CSeparators<StPunctuation> m_Punctuation;
+    CSeparators<StEscape> m_Escape;
+
     wchar_t m_szTabs[cuiMaxSeparatorLength_];
     wchar_t m_szPunctuation[cuiMaxSeparatorLength_];
     wchar_t m_szEscapeChars[cuiMaxSeparatorLength_];
@@ -118,19 +198,26 @@ private:
 
     bool m_bInvalid;
 
-private:
 
+private:
+/*
     void SetSeparators (const wchar_t * szSource, wchar_t * szTarget)
     {
         unsigned int uiLength = wcslen (szTarget);
         if (uiLength > cuiMaxSeparatorLength_)
         {
-            wstring sMsg (L"Separator string too long.");
-            ERROR_LOG (sMsg);
-            throw CException (E_INVALIDARG, sMsg);
+            wchar_t * szMsg = L"Separator string too long.";
+            ERROR_LOG (szMsg);
+            throw CException (E_INVALIDARG, szMsg);
         }
 
         errno_t uiRet = wmemcpy_s (szTarget, cuiMaxSeparatorLength_, szSource, uiLength);
+        if (0 != uiRet)
+        {
+            wchar_t * szMsg = L"wmemcpy_s error.";
+            ERROR_LOG (szMsg);
+            throw CException (uiRet, szMsg);
+        }
     }
 
     const wchar_t * szGetBreakChars()
@@ -172,6 +259,7 @@ private:
 
         return m_szEscapeChars;
     }
+*/
 
 public:
 
@@ -186,9 +274,9 @@ public:
         unsigned int uiSize = m_uiBlocksAllocated * uiAllocationUnit_;
         if (uiSize > cuiMaxSize_)
         {
-            wstring sMsg (L"Requested size exceeds maximum allowed.");
-            ERROR_LOG (sMsg);
-            throw CException (E_INVALIDARG, sMsg);
+            wchar_t * szMsg = L"Requested size exceeds maximum allowed.";
+            ERROR_LOG (szMsg);
+            throw CException (E_INVALIDARG, szMsg);
         }
         m_szData = new wchar_t[m_uiBlocksAllocated * uiAllocationUnit_];
         m_szData[0] = L'\0';
@@ -203,18 +291,18 @@ public:
         if (coSource.m_uiLength > cuiMaxSize_ || 
             coSource.m_uiLength >= coSource.m_uiBlocksAllocated * uiAllocationUnit_)
         {
-            wstring sMsg (L"Source string too long.");
-            ERROR_LOG (sMsg);
-            throw CException (E_INVALIDARG, sMsg);
+            wchar_t * szMsg = L"Source string too long.";
+            ERROR_LOG (szMsg);
+            throw CException (E_INVALIDARG, szMsg);
         }
 
         m_szData = new wchar_t[m_uiBlocksAllocated * uiAllocationUnit_];
         errno_t error = wmemmove_s (m_szData, m_uiLength, coSource.m_szData, m_uiLength); 
 	    if (error)
 	    {
-            wstring sMsg (L"wmemmove_s error.");
-            ERROR_LOG (sMsg);
-            throw CException (error, sMsg);
+            wchar_t * szMsg = L"wmemmove_s error.";
+            ERROR_LOG (szMsg);
+            throw CException (error, szMsg);
 	    }
 
         m_szData[m_uiLength] = L'\0';
@@ -233,9 +321,9 @@ public:
         m_uiLength = wcslen (szSource);
         if (m_uiLength > cuiMaxSize_)
         {
-            wstring sMsg (L"Source string too long.");
-            ERROR_LOG (sMsg);
-            throw CException (E_INVALIDARG, sMsg);
+            wchar_t * szMsg = L"Source string too long.";
+            ERROR_LOG (szMsg);
+            throw CException (E_INVALIDARG, szMsg);
         }
 
         Assign (szSource, m_uiLength);
@@ -249,7 +337,7 @@ public:
 
 
 public:
-
+/*
     void SetBreakChars (const wchar_t * szBreakChars)
     {
         SetSeparators (szBreakChars, m_szBreakChars);
@@ -269,6 +357,7 @@ public:
     {
         SetSeparators (szTabs, m_szTabs);
     }
+*/
 
     static ERelation eCompare (const wchar_t * szLeft, const wchar_t * szRight)
     {
@@ -313,9 +402,9 @@ public:
             }
         }
 
-        wstring sMsg (L"Arguments too long.");
-        ERROR_LOG (sMsg);
-        throw CException (E_INVALIDARG, sMsg);
+        wchar_t * szMsg = L"Arguments too long.";
+        ERROR_LOG (szMsg);
+        throw CException (E_INVALIDARG, szMsg);
 
     }       // eCompare (...)
 
@@ -377,9 +466,9 @@ public:
         unsigned int uiNewSize = uiRhsLength + m_uiLength;
         if (uiNewSize > cuiMaxSize_)
         {
-            wstring sMsg (L"Right-hand side string too long.");
-            ERROR_LOG (sMsg);
-            throw CException (E_INVALIDARG, sMsg);
+            wchar_t * szMsg = L"Right-hand side string too long.";
+            ERROR_LOG (szMsg);
+            throw CException (E_INVALIDARG, szMsg);
         }
 
         Concatenate (szRhs, uiRhsLength);
@@ -393,9 +482,9 @@ public:
         unsigned int uiNewSize = sRhs.m_uiLength + m_uiLength;
         if (uiNewSize > cuiMaxSize_)
         {
-            wstring sMsg (L"Right-hand side string too long.");
-            ERROR_LOG (sMsg);
-            throw CException (E_INVALIDARG, sMsg);
+            wchar_t * szMsg = L"Right-hand side string too long.";
+            ERROR_LOG (szMsg);
+            throw CException (E_INVALIDARG, szMsg);
         }
 
         Concatenate (sRhs.m_szData, sRhs.m_uiLength);
@@ -422,16 +511,16 @@ public:
     {
         if (m_uiLength >= (m_uiBlocksAllocated * uiAllocationUnit_))
         {
-            wstring sMsg (L"Illegal length.");
-            ERROR_LOG (sMsg);
-            throw CException (E_UNEXPECTED, sMsg);
+            wchar_t * szMsg = L"Illegal length.";
+            ERROR_LOG (szMsg);
+            throw CException (E_UNEXPECTED, szMsg);
         }
 
         if (L'\0' != m_szData[m_uiLength])
         {
-            wstring sMsg (L"Malformed string.");
-            ERROR_LOG (sMsg);
-            throw CException (E_UNEXPECTED, sMsg);
+            wchar_t * szMsg = L"Malformed string.";
+            ERROR_LOG (szMsg);
+            throw CException (E_UNEXPECTED, szMsg);
         }
 
         unsigned int uiAt = 0;
@@ -439,9 +528,9 @@ public:
         {
             if (L'\0' == m_szData[uiAt])
             {
-                wstring sMsg (L"Malformed string.");
-                ERROR_LOG (sMsg);
-                throw CException (E_UNEXPECTED, sMsg);
+                wchar_t * szMsg = L"Malformed string.";
+                ERROR_LOG (szMsg);
+                throw CException (E_UNEXPECTED, szMsg);
             }
 
             if (!bIn (m_szData[uiAt], szCharsToTrim))
@@ -467,9 +556,9 @@ public:
         errno_t error = wmemmove_s (m_szData, m_uiLength, &m_szData[uiAt], m_uiLength); 
         if (error)
         {
-            wstring sMsg (L"wmemmove_s error.");
-            ERROR_LOG (sMsg);
-            throw CException (error, sMsg);
+            wchar_t * szMsg = L"wmemmove_s error.";
+            ERROR_LOG (szMsg);
+            throw CException (error, szMsg);
         }
         m_szData[m_uiLength] = L'\0';
     
@@ -477,23 +566,23 @@ public:
 
     void TrimLeft()
     {
-        TrimLeft (szGetBreakChars());
+        TrimLeft (m_Breaks.szGet());
     }
 
     void TrimRight (const wchar_t * szCharsToTrim)
     {
         if (m_uiLength >= m_uiBlocksAllocated * uiAllocationUnit_)
         {
-            wstring sMsg (L"Illegal length.");
-            ERROR_LOG (sMsg);
-            throw CException (E_UNEXPECTED, sMsg);
+            wchar_t * szMsg = L"Illegal length.";
+            ERROR_LOG (szMsg);
+            throw CException (E_UNEXPECTED, szMsg);
         }
 
         if (L'\0' != m_szData[m_uiLength])
         {
-            wstring sMsg (L"Malformed string.");
-            ERROR_LOG (sMsg);
-            throw CException (E_UNEXPECTED, sMsg);
+            wchar_t * szMsg = L"Malformed string.";
+            ERROR_LOG (szMsg);
+            throw CException (E_UNEXPECTED, szMsg);
         }
 
         int iAt = (int)m_uiLength-1;
@@ -501,9 +590,9 @@ public:
         {
             if (L'\0' == m_szData[iAt])
             {
-                wstring sMsg (L"Malformed string.");
-                ERROR_LOG (sMsg);
-                throw CException (E_UNEXPECTED, sMsg);
+                wchar_t * szMsg = L"Malformed string.";
+                ERROR_LOG (szMsg);
+                throw CException (E_UNEXPECTED, szMsg);
             }
 
             if (!bIn (m_szData[iAt], szCharsToTrim))
@@ -526,7 +615,7 @@ public:
 
     void TrimRight()
     {
-        TrimRight (szGetBreakChars());
+        TrimRight (m_Breaks.szGet());
     }
 
     void Trim (wchar_t * szCharsToTrim)
@@ -537,8 +626,8 @@ public:
 
     void Trim()
     {
-        TrimLeft (szGetBreakChars());
-        TrimRight (szGetBreakChars());
+        TrimLeft (m_Breaks.szGet());
+        TrimRight (m_Breaks.szGet());
     }
 
     bool bIn (const wchar_t chr, const wchar_t * szSearchSet)
@@ -561,9 +650,9 @@ public:
             }
         }
 
-        wstring sMsg (L"Search set too long.");
-        ERROR_LOG (sMsg);
-        throw CException (E_INVALIDARG, sMsg);
+        wchar_t * szMsg = L"Search set too long.";
+        ERROR_LOG (szMsg);
+        throw CException (E_INVALIDARG, szMsg);
     
     }   //  bIn
 
@@ -571,30 +660,30 @@ public:
     {
         if (uiLength >= cuiMaxSize_)
         {
-            wstring sMsg (L"Source string too long.");
-            ERROR_LOG (sMsg);
-            throw CException (E_INVALIDARG, sMsg);
+            wchar_t * szMsg = L"Source string too long.";
+            ERROR_LOG (szMsg);
+            throw CException (E_INVALIDARG, szMsg);
         }
 
         if (L'\0' != m_szData[m_uiLength])
         {
-            wstring sMsg (L"Source string not null-terminated.");
-            ERROR_LOG (sMsg);
-            throw CException (E_UNEXPECTED, sMsg);
+            wchar_t * szMsg = L"Source string not null-terminated.";
+            ERROR_LOG (szMsg);
+            throw CException (E_UNEXPECTED, szMsg);
         }
 
         if (uiOffset >= m_uiLength)
         {
-            wstring sMsg (L"Invalid offset.");
-            ERROR_LOG (sMsg);
-            throw CException (E_UNEXPECTED, sMsg);
+            wchar_t * szMsg = L"Invalid offset.";
+            ERROR_LOG (szMsg);
+            throw CException (E_UNEXPECTED, szMsg);
         }
 
         if (uiOffset + uiLength > m_uiLength)
         {
-            wstring sMsg (L"Invalid length.");
-            ERROR_LOG (sMsg);
-            throw CException (E_UNEXPECTED, sMsg);
+            wchar_t * szMsg = L"Invalid length.";
+            ERROR_LOG (szMsg);
+            throw CException (E_UNEXPECTED, szMsg);
         }
 
         unsigned int uiBlocksToAllocate = ((uiLength+1)/uiAllocationUnit_) + 1;
@@ -603,9 +692,9 @@ public:
         errno_t error = wmemmove_s (sResult.m_szData, uiLength, &m_szData[uiOffset], uiLength); 
 	    if (error)
 	    {
-            wstring sMsg (L"wmemmove_s error.");
-            ERROR_LOG (sMsg);
-            throw CException (error, sMsg);
+            wchar_t * szMsg = L"wmemmove_s error.";
+            ERROR_LOG (szMsg);
+            throw CException (error, szMsg);
 	    }
         
         sResult.m_szData[m_uiLength] = L'\0';
@@ -623,9 +712,9 @@ public:
         vector<StToken>::iterator itToken = itFindToken (iAt, eType);
         if (m_vecTokens.end() == itToken)
 	    {
-            wstring sMsg (L"Failed to find token.");
-            ERROR_LOG (sMsg);
-            throw CException (E_FAIL, sMsg);
+            wchar_t * szMsg = L"Failed to find token.";
+            ERROR_LOG (szMsg);
+            throw CException (E_FAIL, szMsg);
 	    }
 
         return sSubstr ((*itToken).uiOffset, (*itToken).uiLength);
@@ -639,9 +728,9 @@ public:
         vector<StToken>::iterator itToken = itFindToken (iAt, eType);
         if (m_vecTokens.end() == itToken)
 	    {
-            wstring sMsg (L"Failed to find token.");
-            ERROR_LOG (sMsg);
-            throw CException (E_FAIL, sMsg);
+            wchar_t * szMsg = L"Failed to find token.";
+            ERROR_LOG (szMsg);
+            throw CException (E_FAIL, szMsg);
 	    }
 
         return *itToken;
@@ -663,9 +752,9 @@ public:
 
         if (uiAt >= m_vecTokens.size())
         {
-            wstring sMsg (L"Token index out of range.");
-            ERROR_LOG (sMsg);
-            throw CException (E_FAIL, sMsg);
+            wchar_t * szMsg = L"Token index out of range.";
+            ERROR_LOG (szMsg);
+            throw CException (E_FAIL, szMsg);
         }
 
         return m_vecTokens[uiAt].eType;
@@ -680,9 +769,9 @@ public:
 
         if (uiAt >= m_vecTokens.size())
         {
-            wstring sMsg (L"Token index out of range.");
-            ERROR_LOG (sMsg);
-            throw CException (E_FAIL, sMsg);
+            wchar_t * szMsg = L"Token index out of range.";
+            ERROR_LOG (szMsg);
+            throw CException (E_FAIL, szMsg);
         }
 
         return m_vecTokens[uiAt];
@@ -695,9 +784,9 @@ public:
 
         if (uiAt >= m_vecTokens.size())
         {
-            wstring sMsg (L"Token index out of range.");
-            ERROR_LOG (sMsg);
-            throw CException (E_FAIL, sMsg);
+            wchar_t * szMsg = L"Token index out of range.";
+            ERROR_LOG (szMsg);
+            throw CException (E_FAIL, szMsg);
         }
 
         return m_vecTokens[uiAt];
@@ -710,9 +799,9 @@ public:
 
         if (uiAt >= m_vecTokens.size())
         {
-            wstring sMsg (L"Token index out of range.");
-            ERROR_LOG (sMsg);
-            throw CException (E_FAIL, sMsg);
+            wchar_t * szMsg = L"Token index out of range.";
+            ERROR_LOG (szMsg);
+            throw CException (E_FAIL, szMsg);
         }
 
         StToken stToken = m_vecTokens[uiAt];
@@ -727,9 +816,9 @@ public:
         vector<StToken>::iterator it_ = find (m_vecTokens.begin(), m_vecTokens.end(), stToken);
         if (m_vecTokens.end() == it_)
         {
-            wstring sMsg (L"Token not found.");
-            ERROR_LOG (sMsg);
-            throw CException (E_FAIL, sMsg);
+            wchar_t * szMsg = L"Token not found.";
+            ERROR_LOG (szMsg);
+            throw CException (E_FAIL, szMsg);
         }
 
         ++it_;
@@ -753,9 +842,9 @@ public:
         vector<StToken>::iterator it_ = find (m_vecTokens.begin(), m_vecTokens.end(), stToken);
         if (m_vecTokens.end() == it_)
         {
-            wstring sMsg (L"Token not found.");
-            ERROR_LOG (sMsg);
-            throw CException (E_FAIL, sMsg);
+            wchar_t * szMsg = L"Token not found.";
+            ERROR_LOG (szMsg);
+            throw CException (E_FAIL, szMsg);
         }
 
         if (m_vecTokens.begin() == it_)
@@ -777,9 +866,9 @@ public:
         vector<StToken>::iterator it_ = find (m_vecTokens.begin(), m_vecTokens.end(), stToken);
         if (it_ == m_vecTokens.end())
         {
-            wstring sMsg (L"Token not found.");
-            ERROR_LOG (sMsg);
-            throw CException (E_FAIL, sMsg);
+            wchar_t * szMsg = L"Token not found.";
+            ERROR_LOG (szMsg);
+            throw CException (E_FAIL, szMsg);
         }
 
         return it_ - m_vecTokens.begin();
@@ -893,9 +982,9 @@ public:
 
         if (uiAt >= m_vecTokens.size())
         {
-            wstring sMsg (L"Token index out of range.");
-            ERROR_LOG (sMsg);
-            throw CException (E_FAIL, sMsg);
+            wchar_t * szMsg = L"Token index out of range.";
+            ERROR_LOG (szMsg);
+            throw CException (E_FAIL, szMsg);
         }
 
         vector<StToken>::iterator it = m_vecTokens.begin();
@@ -912,9 +1001,9 @@ public:
         
         if (m_vecTokens.end() == it)
         {
-            wstring sMsg (L"Token not found.");
-            ERROR_LOG (sMsg);
-            throw CException (E_FAIL, sMsg);
+            wchar_t * szMsg = L"Token not found.";
+            ERROR_LOG (szMsg);
+            throw CException (E_FAIL, szMsg);
         }
 
         return (*it).uiLength;
@@ -944,15 +1033,15 @@ public:
 
 private:
 
-    void Null()
-    {
-        m_szRegex[0] = L'\0';
-	    m_szVowels[0] = L'\0';
-        m_szBreakChars[0] = L'\0';
-        m_szTabs[0] = L'\0';
-        m_szPunctuation[0] = L'\0';
-        m_szEscapeChars[0] = L'\0';
-    }
+//    void Null()
+//    {
+//        m_szRegex[0] = L'\0';
+//	    m_szVowels[0] = L'\0';
+//        m_szBreakChars[0] = L'\0';
+//        m_szTabs[0] = L'\0';
+//        m_szPunctuation[0] = L'\0';
+//        m_szEscapeChars[0] = L'\0';
+//    }
 
     void Grow (unsigned int uiCharsToAdd)
     {
@@ -960,9 +1049,9 @@ private:
 	    errno_t error = wmemmove_s (szNewBuffer, m_uiLength, m_szData, m_uiLength); 
 	    if (error)
 	    {
-            wstring sMsg (L"wmemmove_s failed.");
-            ERROR_LOG (sMsg);
-            throw CException (error, sMsg);
+            wchar_t * szMsg = L"wmemmove_s failed.";
+            ERROR_LOG (szMsg);
+            throw CException (error, szMsg);
 	    }
         szNewBuffer[m_uiLength] = L'\0';
 
@@ -984,9 +1073,9 @@ private:
 	    errno_t error = wmemmove_s (szNewBuffer, m_uiLength, m_szData, m_uiLength); 
 	    if (error)
 	    {
-            wstring sMsg (L"wmemmove_s failed.");
-            ERROR_LOG (sMsg);
-            throw CException (error, sMsg);
+            wchar_t * szMsg = L"wmemmove_s failed.";
+            ERROR_LOG (szMsg);
+            throw CException (error, szMsg);
 	    }
         szNewBuffer[m_uiLength] = L'\0';
 
@@ -1000,9 +1089,9 @@ private:
         unsigned int uiNewLength = m_uiLength + uiRhsLength;
         if (uiNewLength > cuiMaxSize_)
         {
-            wstring sMsg (L"Right-hand side string too long.");
-            ERROR_LOG (sMsg);
-            throw CException (E_INVALIDARG, sMsg);
+            wchar_t * szMsg = L"Right-hand side string too long.";
+            ERROR_LOG (szMsg);
+            throw CException (E_INVALIDARG, szMsg);
         }
 
         if (uiNewLength >= m_uiBlocksAllocated * uiAllocationUnit_)
@@ -1012,9 +1101,9 @@ private:
             errno_t error = wmemmove_s (szNewData, m_uiLength, m_szData, m_uiLength); 
 	        if (error)
 	        {
-                wstring sMsg (L"wmemmove_s error.");
-                ERROR_LOG (sMsg);
-                throw CException (error, sMsg);
+                wchar_t * szMsg = L"wmemmove_s error.";
+                ERROR_LOG (szMsg);
+                throw CException (error, szMsg);
 	        }
             delete[] m_szData;
             m_szData = szNewData;
@@ -1023,9 +1112,9 @@ private:
         errno_t error = wmemmove_s (&m_szData[m_uiLength], uiRhsLength, szRhs, uiRhsLength); 
         if (error)
         {
-            wstring sMsg (L"wmemmove_s error.");
-            ERROR_LOG (sMsg);
-            throw CException (error, sMsg);
+            wchar_t * szMsg = L"wmemmove_s error.";
+            ERROR_LOG (szMsg);
+            throw CException (error, szMsg);
         }
 
         m_uiLength = uiNewLength;
@@ -1053,9 +1142,9 @@ private:
                 if (uiAt != m_uiLength)
                 {
                     m_bInvalid = true;
-                    wstring sMsg (L"Unexpected NULL character.");
-                    ERROR_LOG (sMsg);
-                    throw CException (E_UNEXPECTED, sMsg);
+                    wchar_t * szMsg = L"Unexpected NULL character.";
+                    ERROR_LOG (szMsg);
+                    throw CException (E_UNEXPECTED, szMsg);
                 }
 
                 if (0 == uiAt)
@@ -1066,43 +1155,43 @@ private:
                 if (ecTokenTypeFront == stToken.eType)
                 {
                     m_bInvalid = true;
-                    wstring sMsg (L"Illegal token type.");
-                    ERROR_LOG (sMsg);
-                    throw CException (E_UNEXPECTED, sMsg);
+                    wchar_t * szMsg = L"Illegal token type.";
+                    ERROR_LOG (szMsg);
+                    throw CException (E_UNEXPECTED, szMsg);
                 }
 
                 m_vecTokens.push_back (stToken);
                 return;
             }
 
-            if (bIn (chrCurrent, szGetBreakChars()))
+            if (bIn (chrCurrent, m_Breaks.szGet()))
             {
                 Advance (ecTokenBreakChars, uiAt, stToken);
                 continue;
             }
 
-            if (bIn (chrCurrent, szGetTabs()))
+            if (bIn (chrCurrent, m_Tabs.szGet()))
             {
                 Advance (ecTokenTab, uiAt, stToken);
                 continue;
             }
 
-            if (bIn (chrCurrent, szGetPunctuation()))
+            if (bIn (chrCurrent, m_Punctuation.szGet()))
             {
                 Advance (ecTokenPunctuation, uiAt, stToken);
                 continue;
             }
 
-            if (bIn (chrCurrent, szGetEscapeChars()))
+            if (bIn (chrCurrent, m_Escape.szGet()))
             {
 
                 ATLASSERT(m_uiLength > 0);
                 if (uiAt >= m_uiLength-1)
                 {
                     m_bInvalid = true;
-                    wstring sMsg (L"Unexpected escape character.");
-                    ERROR_LOG (sMsg);
-                    throw CException (E_UNEXPECTED, sMsg);
+                    wchar_t * szMsg = L"Unexpected escape character.";
+                    ERROR_LOG (szMsg);
+                    throw CException (E_UNEXPECTED, szMsg);
                 }
 
                 bool bDoubleEscape = false;
@@ -1128,9 +1217,9 @@ private:
         }   //  for ...
 
         m_bInvalid = true;
-        wstring sMsg (L"Tokenizer failed.");
-        ERROR_LOG (sMsg);
-        throw CException (E_UNEXPECTED, sMsg);
+        wchar_t * szMsg = L"Tokenizer failed.";
+        ERROR_LOG (szMsg);
+        throw CException (E_UNEXPECTED, szMsg);
 
     }   //  Tokenize_ (...)
 
@@ -1138,9 +1227,9 @@ private:
     {
         if (eType <= ecTokenTypeFront || eType > ecTokenTypeBack)
         {
-            wstring sMsg (L"Unexpected token state.");
-            ERROR_LOG (sMsg);
-            throw CException (E_UNEXPECTED, sMsg);
+            wchar_t * szMsg = L"Unexpected token state.";
+            ERROR_LOG (szMsg);
+            throw CException (E_UNEXPECTED, szMsg);
         }
 
         if (eType != stToken.eType)
@@ -1165,9 +1254,9 @@ private:
     {
         if (ecTokenMeta == stToken.eType || uiOffset < 0)
         {
-            wstring sMsg (L"Unexpected token state.");
-            ERROR_LOG (sMsg);
-            throw CException (E_UNEXPECTED, sMsg);
+            wchar_t * szMsg = L"Unexpected token state.";
+            ERROR_LOG (szMsg);
+            throw CException (E_UNEXPECTED, szMsg);
         }
 
         if (ecTokenTypeFront != stToken.eType)
@@ -1183,18 +1272,18 @@ private:
         {
             if (L'\0' == m_szData[iAt])
             {
-                wstring sMsg (L"Unterminated escape sequence.");
-                ERROR_LOG (sMsg);
-                throw CException (E_UNEXPECTED, sMsg);
+                wchar_t * szMsg = L"Unterminated escape sequence.";
+                ERROR_LOG (szMsg);
+                throw CException (E_UNEXPECTED, szMsg);
             }
 
-            if (bIn (m_szData[iAt], szGetEscapeChars()))
+            if (bIn (m_szData[iAt], m_Escape.szGet()))
             {
                 if (uiOffset+1 == iAt)
                 {
-                    wstring sMsg (L"Empty escape sequence.");
-                    ERROR_LOG (sMsg);
-                    throw CException (E_UNEXPECTED, sMsg);
+                    wchar_t * szMsg = L"Empty escape sequence.";
+                    ERROR_LOG (szMsg);
+                    throw CException (E_UNEXPECTED, szMsg);
                 }
                 stToken.uiLength = iAt - uiOffset + 1;
                 m_vecTokens.push_back (stToken);
@@ -1209,16 +1298,16 @@ private:
     {
         if (uiSourceLength >= cuiMaxSize_)
         {
-            wstring sMsg (L"Source string too long.");
-            ERROR_LOG (sMsg);
-            throw CException (E_INVALIDARG, sMsg);
+            wchar_t * szMsg = L"Source string too long.";
+            ERROR_LOG (szMsg);
+            throw CException (E_INVALIDARG, szMsg);
         }
 
         if (L'\0' != szSource[uiSourceLength])
         {
-            wstring sMsg (L"Source string not null-terminated.");
-            ERROR_LOG (sMsg);
-            throw CException (E_UNEXPECTED, sMsg);
+            wchar_t * szMsg = L"Source string not null-terminated.";
+            ERROR_LOG (szMsg);
+            throw CException (E_UNEXPECTED, szMsg);
         }
 
         if (uiSourceLength >= (m_uiBlocksAllocated * uiAllocationUnit_))
@@ -1234,9 +1323,9 @@ private:
         errno_t error = wmemmove_s (m_szData, uiSourceLength, szSource, uiSourceLength); 
 	    if (error)
 	    {
-            wstring sMsg (L"wmemmove_s error.");
-            ERROR_LOG (sMsg);
-            throw CException (error, sMsg);
+            wchar_t * szMsg = L"wmemmove_s error.";
+            ERROR_LOG (szMsg);
+            throw CException (error, szMsg);
 	    }
 
         m_szData[uiSourceLength] = L'\0';
@@ -1250,9 +1339,9 @@ private:
 
         if (uiAt >= m_vecTokens.size())
         {
-            wstring sMsg (L"Token position out of range.");
-            ERROR_LOG (sMsg);
-            throw CException (E_UNEXPECTED, sMsg);
+            wchar_t * szMsg = L"Token position out of range.";
+            ERROR_LOG (szMsg);
+            throw CException (E_UNEXPECTED, szMsg);
         }
 
         unsigned int uiField = 0;
@@ -1271,9 +1360,9 @@ private:
 
         if (m_vecTokens.end() == it_)
         {
-            wstring sMsg (L"Token position out of range.");
-            ERROR_LOG (sMsg);
-            throw CException (E_UNEXPECTED, sMsg);
+            wchar_t * szMsg = L"Token position out of range.";
+            ERROR_LOG (szMsg);
+            throw CException (E_UNEXPECTED, szMsg);
         }
 
         return it_;
@@ -1295,9 +1384,9 @@ private:
 
         if (m_vecTokens.begin() == it_)
         {
-            wstring sMsg (L"Failed to find token.");
-            ERROR_LOG (sMsg);
-            throw CException (E_FAIL, sMsg);
+            wchar_t * szMsg = L"Failed to find token.";
+            ERROR_LOG (szMsg);
+            throw CException (E_FAIL, szMsg);
         }
 
         return --it_;
@@ -1309,17 +1398,17 @@ private:
         unsigned int uiRegexLength = wcslen (szRegex);
         if (uiRegexLength > cuiMaxRegexLength_)
         {
-            wstring sMsg (L"Regular expression too long.");
-            ERROR_LOG (sMsg);
-            throw CException (E_INVALIDARG, sMsg);
+            wchar_t * szMsg = L"Regular expression too long.";
+            ERROR_LOG (szMsg);
+            throw CException (E_INVALIDARG, szMsg);
         }
 
         errno_t error = wmemmove_s (m_szRegex, uiRegexLength, szRegex, uiRegexLength); 
 	    if (error)
 	    {
-            wstring sMsg (L"wmemmove_s error.");
-            ERROR_LOG (sMsg);
-            throw CException (error, sMsg);
+            wchar_t * szMsg = L"wmemmove_s error.";
+            ERROR_LOG (szMsg);
+            throw CException (error, szMsg);
 	    }
 
         m_szRegex[uiRegexLength] = L'\0';   
