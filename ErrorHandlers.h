@@ -40,15 +40,15 @@ private:
     vector<wstring> m_vecLog;
 
 public:
-    void HandleError (const wstring& sBriefDescription,
-                      const wstring& sLocation,
-                      const wstring& sDetailedDescription = L"",
+    void HandleError (const wchar_t * szBriefDescription,
+                      const wchar_t * szLocation,
+                      const wchar_t * szDetailedDescription = L"",
                       int iErrCode = -1,
                       bool bWrite = false) 
     {
-        wstring sFormattedMsg = sFormat (sBriefDescription, 
-                                         sLocation, 
-                                         sDetailedDescription, 
+        wstring sFormattedMsg = sFormat (szBriefDescription, 
+                                         szLocation, 
+                                         szDetailedDescription, 
                                          iErrCode);
         if (bWrite)
         {
@@ -142,22 +142,22 @@ public:
 	    return io_.str();
     };
 
-    wstring sFormat (const wstring& sBriefDescription, 
-                            const wstring& sLocation, 
-                            const wstring& sDetailedDescription = L"", 
-                            int iErrCode = -1)
+    wstring sFormat (const wchar_t * szBriefDescription, 
+                     const wchar_t * szLocation, 
+                     const wchar_t * szDetailedDescription = L"", 
+                     int iErrCode = -1)
     {
-        return sFormat_ (sBriefDescription,
-                         sLocation,
-                         sDetailedDescription,
+        return sFormat_ (szBriefDescription,
+                         szLocation,
+                         szDetailedDescription,
                          iErrCode);
     }
 
 private:
-    wstring sFormat_ (const wstring& sBriefDescription, 
-                             const wstring& sLocation, 
-                             const wstring& sDetailedDescription, 
-                             int iErrCode)
+    wstring sFormat_ (const wchar_t * szBriefDescription, 
+                      const wchar_t * szLocation, 
+                      const wchar_t * szDetailedDescription, 
+                      int iErrCode)
     {
 	    time_t timeCurrent;
 	    time (&timeCurrent);
@@ -177,16 +177,17 @@ private:
 	    sTimeStamp += sToString (stLocalTime.tm_sec);
 
         wstring sMsg = sTimeStamp + L"\t" +
-                       sBriefDescription + L"\t" + 
-                       sLocation + L"\t";
+                       szBriefDescription + L"\t" + 
+                       szLocation + L"\t";
         if (iErrCode >= 0)
         {
 	        sMsg += L"\t" + sToString (iErrCode);
         }
 
-        if (!sDetailedDescription.empty())
+        if (szDetailedDescription)
         {
-            sMsg += L"\t" + sDetailedDescription;
+            sMsg += L"\t";
+            sMsg + szDetailedDescription;
         }
 
         return sMsg;
@@ -254,7 +255,7 @@ private:
 
 #define ERROR_LOG(sMsg__) wstringstream io__; \
             io__ << __LINE__; \
-            wstring sLocation__ = wstring (_T(__FILE__)) + \
+                wstring sLocation__ = wstring (_T(__FILE__)) + \
                 wstring (_T("\t")) + io__.str() + wstring (_T("\t")) + wstring (_T(__FUNCTION__)); \
                 CError * pError = CError::pGetInstance(); \
-                pError->HandleError (sMsg__, sLocation__); 
+                pError->HandleError (sMsg__, sLocation__.c_str()); 

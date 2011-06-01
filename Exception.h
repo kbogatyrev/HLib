@@ -25,7 +25,7 @@ public:
         m_iErrorCode = -1;
     };
 
-    CException (int iErrorCode, wchar_t * szDescription)
+    CException (int iErrorCode, const wchar_t * szDescription)
         : m_iErrorCode (iErrorCode)
     {
         int iLength = min (wcslen (szDescription), cuiMaxTextLength);
