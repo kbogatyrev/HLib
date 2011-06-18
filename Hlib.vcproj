@@ -217,6 +217,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Globals.h"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.h"
 				>
 			</File>
