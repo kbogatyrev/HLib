@@ -4,7 +4,6 @@
 
 class CException
 {
-
     static const unsigned int cuiMaxTextLength = 5000;
 
 public:
@@ -29,7 +28,14 @@ public:
         : m_iErrorCode (iErrorCode)
     {
         int iLength = min (wcslen (szDescription), cuiMaxTextLength);
-        memmove_s (m_arrDescription, cuiMaxTextLength, szDescription, iLength);                
+        errno_t error = wmemmove_s (m_arrDescription, cuiMaxTextLength, szDescription, iLength);                
+        if (error)
+        {
+            ATLASSERT(0);
+            wchar_t * szMsg = L"wmemmove_s failed.";
+            ERROR_LOG (szMsg);
+        }
+        m_arrDescription[iLength] = L'\0';
     }
 
     virtual ~CException() {};
