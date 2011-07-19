@@ -163,7 +163,6 @@ private:
 	    time (&timeCurrent);
         tm stLocalTime;
         errno_t iRet = localtime_s (&stLocalTime,  &timeCurrent);
-
 	    wstring sTimeStamp = sToString (stLocalTime.tm_year + 1900);
 	    sTimeStamp += L"-";
 	    sTimeStamp += sToString (stLocalTime.tm_mon + 1);
@@ -175,7 +174,6 @@ private:
 	    sTimeStamp += sToString (stLocalTime.tm_min);
         sTimeStamp += L":";
 	    sTimeStamp += sToString (stLocalTime.tm_sec);
-
         wstring sMsg = sTimeStamp + L"\t" +
                        szBriefDescription + L"\t" + 
                        szLocation + L"\t";
@@ -253,13 +251,13 @@ private:
 
 };
 
-/*
+
 #define ERROR_LOG(sMsg__) wstringstream io__; \
             io__ << __LINE__; \
                 wstring sLocation__ = wstring (_T(__FILE__)) + \
                 wstring (_T("\t")) + io__.str() + wstring (_T("\t")) + wstring (_T(__FUNCTION__)); \
                 CError * pError = CError::pGetInstance(); \
                 pError->HandleError (sMsg__, sLocation__.c_str()); 
-*/
 
-#define ERROR_LOG(sMsg__) 
+
+//#define ERROR_LOG(sMsg__) 
