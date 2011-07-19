@@ -221,6 +221,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\LexemeHasher.h"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.h"
 				>
 			</File>
