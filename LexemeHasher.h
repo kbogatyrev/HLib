@@ -14,6 +14,9 @@ struct StLexemeHasher
     int iAccentType2;
     CEString sComment;
 
+    StLexemeHasher() : iInflectionType (-1), iAccentType1 (-1), iAccentType2 (-1)
+    {}
+
     CEString sHash()
     {
         CEString sText (sSourceForm);
