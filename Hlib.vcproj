@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="Hlib"
 	ProjectGUID="{24B60593-A78B-4031-AE98-557378E58E8D}"
 	RootNamespace="Hlib"
@@ -186,7 +186,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
+						UsePrecompiledHeader="2"
 					/>
 				</FileConfiguration>
 			</File>
