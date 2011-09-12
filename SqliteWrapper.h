@@ -16,11 +16,6 @@ public:
 
 class CSqlite
 {
-private:
-
-static sqlite3 * m_spDb_;
-static int m_iRefcount_;
-
 public:
 
     CSqlite()
@@ -89,6 +84,9 @@ public:
 
     
 private:
+
+	static sqlite3 * m_spDb_;
+	static int m_iRefcount_;
 
     sqlite3_stmt * m_pStmt;
     CEString m_sDbPath;
@@ -192,6 +190,46 @@ public:
     
     }   //  CommitTransaction (...)
 
+    void RollbackTransaction()
+    {
+        RollbackTransaction (m_pStmt);
+    }
+
+    void RollbackTransaction (unsigned int uiHandle)
+    {
+        RollbackTransaction ((sqlite3_stmt *)uiHandle);
+    }
+
+    void RollbackTransaction (sqlite3_stmt * pStmt)
+    {
+        if (NULL == m_spDb_)
+        {
+            throw CException (-1, L"No DB handle");
+        }
+
+        vecRowResult.clear();
+
+        int iRet = SQLITE_OK;
+        iRet = sqlite3_prepare16_v2 (m_spDb_, L"ROLLBACK;", -1, &pStmt, NULL);
+	    if (SQLITE_OK != iRet) 
+        {
+            throw CException (iRet, L"sqlite3_prepare16_v2 failed");
+        }
+
+	    iRet = sqlite3_step (pStmt);
+	    if (SQLITE_DONE != iRet) 
+        {
+            throw CException (iRet, L"sqlite3_step failed");
+        }
+
+	    iRet = sqlite3_finalize (pStmt);
+        if (SQLITE_OK != iRet)
+        {
+            throw CException (iRet, L"sqlite3_finalize failed");
+        }
+    
+    }   //  RollbackTransaction (...)
+	
 /*
     void v_Exec (const wstring& sStmt, void (*v_Callback_)(sqlite3_stmt*, void*), void* po_Arguments)
     {
