@@ -27,16 +27,16 @@ public:
 
     void Init()
     {
-        BOOL uiRet = CryptAcquireContext (&hCryptProv, NULL, NULL, PROV_RSA_FULL, 0);
+        BOOL uiRet = CryptAcquireContext (&hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
         if (!uiRet)
         {
-            throw CException (-1, L"CMD5::Init(): CryptAcquireContext() failed.");
+            throw CException (GetLastError(), L"CMD5::Init(): CryptAcquireContext() failed.");
         }
 
         uiRet = CryptCreateHash (hCryptProv, CALG_MD5, 0, 0, &hHash);
         if (!uiRet)
         {
-            throw CException (-1, L"CMD5::Init(): CryptCreateHash() failed.");
+            throw CException (GetLastError(), L"CMD5::Init(): CryptCreateHash() failed.");
         }
 
     }   //  Init()
