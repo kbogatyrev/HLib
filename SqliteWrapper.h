@@ -237,8 +237,7 @@ public:
     
     }   //  RollbackTransaction (...)
     
-/*
-    void v_Exec (const wstring& sStmt, void (*v_Callback_)(sqlite3_stmt*, void*), void* po_Arguments)
+    void Exec (const CEString& sStmt, void (*Callback)(sqlite3_stmt *, void *) = NULL, void * pArguments = NULL)
     {
         if (NULL == m_spDb_)
         {
@@ -246,31 +245,34 @@ public:
         }
 
         int iRet = SQLITE_OK;
-        iRet = sqlite3_prepare16_v2 (m_spDb_, sStmt.c_str(), -1, &m_pStmt, NULL);
+        sqlite3_stmt * pStmt = NULL;
+        iRet = sqlite3_prepare16_v2 (m_spDb_, sStmt, -1, &pStmt, NULL);
         if (SQLITE_OK != iRet) 
         {
             throw CException (iRet, L"sqlite3_prepare16_v2 failed");
         }
 
-        iRet = sqlite3_step (m_pStmt);
+        iRet = sqlite3_step (pStmt);
         while (iRet == SQLITE_ROW) 
         {
-             (*v_Callback_)(m_pStmt, po_Arguments);
-             iRet = sqlite3_step (m_pStmt);
+            if (Callback)
+            {
+                (*Callback)(pStmt, pArguments);
+            }
+            iRet = sqlite3_step (pStmt);
         }
         if (SQLITE_ROW != iRet && SQLITE_DONE != iRet) 
         {
             throw CException (iRet, L"sqlite3_step failed");
         }
 
-        iRet = sqlite3_finalize (m_pStmt);
+        iRet = sqlite3_finalize (pStmt);
         if (SQLITE_OK != iRet)
         {
             throw CException (iRet, L"sqlite3_finalize failed");
         }
 
-    }   // v_Exec()
-*/
+    }   // Exec()
 
     void PrepareForSelect (const CEString& sStmt)
     {
