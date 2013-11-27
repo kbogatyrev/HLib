@@ -64,7 +64,7 @@ public:
         for (int iByte = 0; iByte < 16; ++iByte)
         {
             io_.width (2);
-	        io_ << hex << byteHash[iByte];
+            io_ << hex << byteHash[iByte];
         }
 
         return io_.str().c_str();

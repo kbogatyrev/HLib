@@ -137,9 +137,9 @@ public:
     template <typename T>
     wstring sToString (T from)
     {
-	    wstringstream io_;
-	    io_ << from;
-	    return io_.str();
+        wstringstream io_;
+        io_ << from;
+        return io_.str();
     };
 
     wstring sFormat (const wchar_t * szBriefDescription, 
@@ -159,27 +159,27 @@ private:
                       const wchar_t * szDetailedDescription, 
                       int iErrCode)
     {
-	    time_t timeCurrent;
-	    time (&timeCurrent);
+        time_t timeCurrent;
+        time (&timeCurrent);
         tm stLocalTime;
         errno_t iRet = localtime_s (&stLocalTime,  &timeCurrent);
-	    wstring sTimeStamp = sToString (stLocalTime.tm_year + 1900);
-	    sTimeStamp += L"-";
-	    sTimeStamp += sToString (stLocalTime.tm_mon + 1);
-	    sTimeStamp += L"-";
-	    sTimeStamp += sToString (stLocalTime.tm_mday);
-	    sTimeStamp += L"-";
-	    sTimeStamp += sToString (stLocalTime.tm_hour);
+        wstring sTimeStamp = sToString (stLocalTime.tm_year + 1900);
+        sTimeStamp += L"-";
+        sTimeStamp += sToString (stLocalTime.tm_mon + 1);
+        sTimeStamp += L"-";
+        sTimeStamp += sToString (stLocalTime.tm_mday);
+        sTimeStamp += L"-";
+        sTimeStamp += sToString (stLocalTime.tm_hour);
         sTimeStamp += L":";
-	    sTimeStamp += sToString (stLocalTime.tm_min);
+        sTimeStamp += sToString (stLocalTime.tm_min);
         sTimeStamp += L":";
-	    sTimeStamp += sToString (stLocalTime.tm_sec);
+        sTimeStamp += sToString (stLocalTime.tm_sec);
         wstring sMsg = sTimeStamp + L"\t" +
                        szBriefDescription + L"\t" + 
                        szLocation + L"\t";
         if (iErrCode >= 0)
         {
-	        sMsg += L"\t" + sToString (iErrCode);
+            sMsg += L"\t" + sToString (iErrCode);
         }
 
         if (szDetailedDescription)
@@ -189,8 +189,8 @@ private:
         }
 
         return sMsg;
-	
-    }	//  str_Format_ (...)
+    
+    }    //  str_Format_ (...)
 
     bool bWriteLog (const wstring& sMsg)
     {

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef H_SQLITE_WRAPPER
+#define H_SQLITE_WRAPPER
 
 //#include "ExtString.h"
 #include "EString.h"
@@ -8,14 +9,13 @@
 
 static const wchar_t * SZ_SEPARATOR = L"|";
 
-struct stRowSetMap // Introduced to prevent Warning C4503
-{
-public:
-    multimap<CEString, vector<map<CEString, CEString>>::iterator> mmap;
-};
-
 class CSqlite
 {
+private:
+
+static sqlite3 * m_spDb_;
+static int m_iRefcount_;
+
 public:
 
     CSqlite()
@@ -23,7 +23,7 @@ public:
         ++m_iRefcount_;
     }
 
-    CSqlite (const CEString& sDbPath) : m_bPreparedFromCache (false)
+    CSqlite (const CEString& sDbPath)
     {
         if (0 >= m_iRefcount_)
         {
@@ -84,32 +84,15 @@ public:
 
     
 private:
-    static sqlite3 * m_spDb_;
-    static int m_iRefcount_;
 
     sqlite3_stmt * m_pStmt;
     CEString m_sDbPath;
-
-    map<CEString, vector<map<CEString, CEString>>> m_mapTables;
-    map<CEString, int> m_mapIndices;                // table; parameter; link to the parameter map
-    vector<map<CEString, int>> m_vecIdxParameters;  // parameter; link to the value-rows multimap
-    vector<stRowSetMap> m_vecIdxRows;               // each multimap contains a value and
-                                                    // a collection of pointers to corresponding rows
-    vector<vector<CEString>> m_vecRowResult;
-    bool m_bPreparedFromCache;                      // true iff the current SELECT result is stored in m_vecRowResult
 
     int m_iExtendedErrCode;
 
 public:
     void Open (const CEString& sPath)
     {
-        m_mapTables.clear();
-        m_mapIndices.clear();
-        m_vecIdxParameters.clear();
-        m_vecIdxRows.clear();
-        m_vecRowResult.clear();
-        m_bPreparedFromCache = false;
-
         int iRet = sqlite3_open16 (sPath, &m_spDb_);
         if (SQLITE_OK != iRet)
         {
@@ -133,9 +116,6 @@ public:
         {
             throw CException (-1, L"No DB handle");
         }
-
-        m_vecRowResult.clear();
-        m_bPreparedFromCache = false;
 
         int iRet = SQLITE_OK;
         iRet = sqlite3_prepare16_v2 (m_spDb_, L"BEGIN;", -1, &pStmt, NULL);
@@ -174,22 +154,20 @@ public:
             throw CException (-1, L"No DB handle");
         }
 
-        m_vecRowResult.clear();
-
         int iRet = SQLITE_OK;
         iRet = sqlite3_prepare16_v2 (m_spDb_, L"COMMIT;", -1, &pStmt, NULL);
-	    if (SQLITE_OK != iRet) 
+        if (SQLITE_OK != iRet) 
         {
             throw CException (iRet, L"sqlite3_prepare16_v2 failed");
         }
 
-	    iRet = sqlite3_step (pStmt);
-	    if (SQLITE_DONE != iRet) 
+        iRet = sqlite3_step (pStmt);
+        if (SQLITE_DONE != iRet) 
         {
             throw CException (iRet, L"sqlite3_step failed");
         }
 
-	    iRet = sqlite3_finalize (pStmt);
+        iRet = sqlite3_finalize (pStmt);
         if (SQLITE_OK != iRet)
         {
             throw CException (iRet, L"sqlite3_finalize failed");
@@ -214,8 +192,6 @@ public:
             throw CException (-1, L"No DB handle");
         }
 
-        m_vecRowResult.clear();
-
         int iRet = SQLITE_OK;
         iRet = sqlite3_prepare16_v2 (m_spDb_, L"ROLLBACK;", -1, &pStmt, NULL);
         if (SQLITE_OK != iRet) 
@@ -236,8 +212,9 @@ public:
         }
     
     }   //  RollbackTransaction (...)
-    
-    void Exec (const CEString& sStmt, void (*Callback)(sqlite3_stmt *, void *) = NULL, void * pArguments = NULL)
+
+/*
+    void v_Exec (const wstring& sStmt, void (*v_Callback_)(sqlite3_stmt*, void*), void* po_Arguments)
     {
         if (NULL == m_spDb_)
         {
@@ -245,34 +222,31 @@ public:
         }
 
         int iRet = SQLITE_OK;
-        sqlite3_stmt * pStmt = NULL;
-        iRet = sqlite3_prepare16_v2 (m_spDb_, sStmt, -1, &pStmt, NULL);
+        iRet = sqlite3_prepare16_v2 (m_spDb_, sStmt.c_str(), -1, &m_pStmt, NULL);
         if (SQLITE_OK != iRet) 
         {
             throw CException (iRet, L"sqlite3_prepare16_v2 failed");
         }
 
-        iRet = sqlite3_step (pStmt);
+        iRet = sqlite3_step (m_pStmt);
         while (iRet == SQLITE_ROW) 
         {
-            if (Callback)
-            {
-                (*Callback)(pStmt, pArguments);
-            }
-            iRet = sqlite3_step (pStmt);
+            (*v_Callback_)(m_pStmt, po_Arguments);
+            iRet = sqlite3_step (m_pStmt);
         }
         if (SQLITE_ROW != iRet && SQLITE_DONE != iRet) 
         {
             throw CException (iRet, L"sqlite3_step failed");
         }
 
-        iRet = sqlite3_finalize (pStmt);
+        iRet = sqlite3_finalize (m_pStmt);
         if (SQLITE_OK != iRet)
         {
             throw CException (iRet, L"sqlite3_finalize failed");
         }
 
-    }   // Exec()
+    }   // v_Exec()
+*/
 
     void PrepareForSelect (const CEString& sStmt)
     {
@@ -288,144 +262,6 @@ public:
 
     void PrepareForSelect (const CEString& sStmt, sqlite3_stmt *& pStmt)
     {
-        // If the table has been loaded then search there; if not, search in the DB
-        m_vecRowResult.clear();
-        m_bPreparedFromCache = false;
-
-        if (!m_mapTables.empty())
-        {
-            CEString sStmtRegex(sStmt);
-            if (sStmtRegex.bRegexMatch(L"(select|SELECT|Select)\\s+(.*?)\\s+(from|FROM|From)\\s+([^\\s]+)\\s*(.*)"))
-            {
-                CEString sColumnsToSelect = sStmtRegex.sGetRegexMatch(1);
-                CEString sTable = sStmtRegex.sGetRegexMatch(3);
-                CEString sRest = sStmtRegex.sGetRegexMatch(4);
-
-                vector<CEString> vecColumnsToSelect;
-
-                sColumnsToSelect.SetBreakChars(L",");
-                for (unsigned int uiField = 0; uiField < sColumnsToSelect.uiGetNumOfFields(); ++uiField)
-                {
-                    CEString sColumnName = sColumnsToSelect.sGetField(uiField);
-                    sColumnName.TrimLeft();
-                    vecColumnsToSelect.push_back(sColumnName);
-                }
-
-                if (m_mapTables.count(sTable) > 0 && vecColumnsToSelect.size() > 0)   // No conditions specified
-                {
-                    bool bOK = true;
-                    if (sRest.uiLength() == 0)
-                    {
-                        if (vecColumnsToSelect[0] == L"*")
-                        {
-                            for (vector<map<CEString, CEString>>::iterator itRow = m_mapTables[sTable].begin();
-                                 itRow != m_mapTables[sTable].end();
-                                 ++itRow)
-                            {
-                                vector<CEString> vecRow;
-                                for (map<CEString, CEString>::iterator itCol = (*itRow).begin();
-                                     itCol != (*itRow).end();
-                                     ++itCol)
-                                {
-                                    vecRow.push_back(itCol->second);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            for (vector<map<CEString, CEString>>::iterator itRow = m_mapTables[sTable].begin();
-                                 itRow != m_mapTables[sTable].end();
-                                 ++itRow)
-                            {
-                                vector<CEString> vecRow;
-                                for (vector<CEString>::iterator itCol = vecColumnsToSelect.begin();
-                                     itCol != vecColumnsToSelect.end();
-                                     ++itCol)
-                                {
-                                    if (itRow->count(*itCol) <= 0)
-                                    {
-                                        bOK = false;
-                                        break;
-                                    }
-                                    vecRow.push_back((*itRow)[*itCol]);
-                                }
-                            }
-                        }
-                    }   // if (sRest.uiLength() == 0)...
-                    else if (sRest.bRegexMatch(L"(WHERE|where|Where)\\s+([^\\s]+)\\s*=\\s*\\\"?([^\\s\\\"]+)\\\"?;?\\s*"))
-                    {
-                        // use the indices instead of browsing the table
-                        CEString sParameter = sRest.sGetRegexMatch(1);
-                        CEString sValue = sRest.sGetRegexMatch(2);
-
-                        if (m_mapIndices.count(sTable) > 0 &&
-                            m_vecIdxParameters[m_mapIndices[sTable]].count(sParameter) > 0)
-                        {
-                            stRowSetMap soRows = m_vecIdxRows[m_vecIdxParameters[m_mapIndices[sTable]][sParameter]];
-                            pair<multimap<CEString, vector<map<CEString, CEString>>::iterator>::iterator,
-                                 multimap<CEString, vector<map<CEString, CEString>>::iterator>::iterator> pairSearchResult;
-                            pairSearchResult = soRows.mmap.equal_range(sValue);
-                            if (vecColumnsToSelect[0] == L"*")
-                            {
-                                for (; pairSearchResult.first != pairSearchResult.second; ++pairSearchResult.first)
-                                {
-                                    vector<map<CEString, CEString>>::iterator itRow = pairSearchResult.first->second;
-                                    vector<CEString> vecRow;
-                                    for (map<CEString, CEString>::iterator itCol = (*itRow).begin();
-                                         itCol != (*itRow).end();
-                                         ++itCol)
-                                    {
-                                        vecRow.push_back(itCol->second);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                for (; pairSearchResult.first != pairSearchResult.second; ++pairSearchResult.first)
-                                {
-                                    vector<map<CEString, CEString>>::iterator itRow = pairSearchResult.first->second;
-                                    vector<CEString> vecRow;
-                                    for (vector<CEString>::iterator itCol = vecColumnsToSelect.begin();
-                                         itCol != vecColumnsToSelect.end();
-                                         ++itCol)
-                                    {
-                                        if (itRow->count(*itCol) <= 0)
-                                        {
-                                            bOK = false;
-                                            break;
-                                        }
-                                        vecRow.push_back((*itRow)[*itCol]);
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            bOK = false;
-                        }
-                    }   // else if (sRest.bRegexMatch(L"([^\\s]+)\\s*=\\s*([^\\s]+)\\s*"))...
-                    else
-                    {
-                        bOK = false;
-                    }
-
-                    if (!bOK)
-                    {
-                        m_vecRowResult.clear();
-                        m_bPreparedFromCache = false;
-                    }
-                    else
-                    {
-                        // Rows have been found and stored in m_vecRowResult; add one more row and return
-                        vector<CEString> vecEmpty;
-                        m_vecRowResult.push_back(vecEmpty);
-                        m_bPreparedFromCache = true;
-                        return;
-                    }
-                }
-            }   // if (sStmtRegex.bRegexMatch...
-        }
-
         int iRet = sqlite3_prepare16_v2 (m_spDb_, sStmt, -1, &pStmt, NULL);
         if (SQLITE_OK != iRet)
         {
@@ -440,10 +276,6 @@ public:
 
     unsigned int uiPrepareForInsert (const CEString& sTable, int iColumns, sqlite3_stmt *& pStmt)
     {
-        m_vecRowResult.clear();
-        m_bPreparedFromCache = false;
-        vDropTable(sTable);
-
         CEString sStmt = L"INSERT INTO ";
         sStmt += sTable;
         sStmt += L" VALUES (NULL, ";
@@ -619,19 +451,6 @@ public:
             throw CException (-1, L"No statement");
         }
 
-        if (m_bPreparedFromCache)
-        {
-            m_vecRowResult.pop_back();
-            if (m_vecRowResult.size() > 0)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
         int iRet = sqlite3_step (pStmt);
         if (SQLITE_DONE == iRet)
         {
@@ -660,16 +479,8 @@ public:
 
     void GetData (int iColumn, bool& bValue, sqlite3_stmt * pStmt)
     {
-        if (m_bPreparedFromCache)
-        {
-            wstring sRet = m_vecRowResult[m_vecRowResult.size() - 1][iColumn];
-            bValue = (sRet != L"0");
-        }
-        else
-        {
-            int iRet = sqlite3_column_int (pStmt, iColumn);
-            bValue = (iRet != 0);
-        }
+        int iRet = sqlite3_column_int (pStmt, iColumn);
+        bValue = (iRet != 0);
     }
 
     void GetData (int iColumn, int& iValue)
@@ -684,16 +495,7 @@ public:
 
     void GetData (int iColumn, int& iValue, sqlite3_stmt * pStmt)
     {
-        if (m_bPreparedFromCache)
-        {
-            wstringstream ws;
-            ws << m_vecRowResult[m_vecRowResult.size() - 1][iColumn];
-            ws >> iValue;
-        }
-        else
-        {
-            iValue = sqlite3_column_int (pStmt, iColumn);
-        }
+        iValue = sqlite3_column_int (pStmt, iColumn);
     }
 
     void GetData (int iColumn, __int64& ll_value)
@@ -708,16 +510,7 @@ public:
 
     void GetData (int iColumn, __int64& ll_value, sqlite3_stmt * pStmt)
     {
-        if (m_bPreparedFromCache)
-        {
-            wstringstream ws;
-            ws << m_vecRowResult[m_vecRowResult.size() - 1][iColumn];
-            ws >> ll_value;
-        }
-        else
-        {
-            ll_value = sqlite3_column_int64 (pStmt, iColumn);
-        }
+        ll_value = sqlite3_column_int64 (pStmt, iColumn);
     }
 
     void GetData (int iColumn, CEString& sValue)
@@ -732,17 +525,10 @@ public:
 
     void GetData (int iColumn, CEString& sValue, sqlite3_stmt * pStmt)
     {
-        if (m_bPreparedFromCache)
+        const void * p_ = sqlite3_column_text16 (pStmt, iColumn);
+        if (p_)
         {
-            sValue = m_vecRowResult[m_vecRowResult.size() - 1][iColumn];
-        }
-        else
-        {
-            const void * p_ = sqlite3_column_text16 (pStmt, iColumn);
-            if (p_)
-            {
-                sValue = static_cast<wchar_t *>(const_cast<void *>(p_));
-            }
+            sValue = static_cast<wchar_t *>(const_cast<void *>(p_));
         }
     }
 
@@ -767,9 +553,6 @@ public:
         {
             throw CException (-1, L"No statement handle");
         }
-
-        m_vecRowResult.clear();
-        m_bPreparedFromCache = false;
 
         int iRet = sqlite3_finalize (pStmt);
         if (SQLITE_OK != iRet)
@@ -930,9 +713,9 @@ public:
         errno_t iError = _tfopen_s (&ioOutStream, sPath, L"w, ccs=UNICODE");
         if (0 != iError)
         {
-            CString csMsg;
-            csMsg.Format (L"Unable to open export file, error %d", iError);
-            throw CException (-1, (LPCTSTR)csMsg);
+            CEString sMsg(L"Unable to open export file, error ");
+            sMsg += CEString::sToString(iError);
+            throw CException (-1, sMsg);
         }
 
         vector<CEString>::const_iterator itTable  = vecTables.begin();
@@ -1052,20 +835,13 @@ public:
             throw CException (-1, L"No DB handle");
         }
 
-        m_mapTables.clear();
-        m_mapIndices.clear();
-        m_vecIdxParameters.clear();
-        m_vecIdxRows.clear();
-        m_vecRowResult.clear();
-        m_bPreparedFromCache = false;
-
         FILE * ioInStream = NULL;
         errno_t iError = _tfopen_s (&ioInStream, sPath, L"r, ccs=UNICODE");
         if (0 != iError)
         {
-            CString csMsg;
-            csMsg.Format (L"Unable to open import file, error %d", iError);
-            throw CException (-1, csMsg);
+            CEString sMsg(L"Unable to open import file, error ");
+                sMsg += CEString::sToString(iError);
+            throw CException (-1, sMsg);
         }
 
         int iCharsRead = 0;
@@ -1194,8 +970,8 @@ public:
                 throw CException (iRet, L"sqlite3_prepare16_v2 failed for drop.");
             }
 
-	        iRet = sqlite3_step (pStmt);
-	        if (SQLITE_DONE != iRet) 
+            iRet = sqlite3_step (pStmt);
+            if (SQLITE_DONE != iRet) 
             {
                 throw CException (iRet, L"sqlite3_step failed for drop.");
             }
@@ -1223,8 +999,8 @@ public:
             throw CException (iRet, L"sqlite3_prepare16_v2 failed for create.");
         }
 
-	    iRet = sqlite3_step (pStmt);
-	    if (SQLITE_DONE != iRet) 
+        iRet = sqlite3_step (pStmt);
+        if (SQLITE_DONE != iRet) 
         {
             throw CException (iRet, L"sqlite3_step failed for create.");
         }
@@ -1247,13 +1023,6 @@ public:
     {
         long lFileLength = _filelength (_fileno (ioInstream))/sizeof (wchar_t);
         int iPercentDone = 0;
-
-        m_mapTables.clear();
-        m_mapIndices.clear();
-        m_vecIdxParameters.clear();
-        m_vecIdxRows.clear();
-        m_vecRowResult.clear();
-        m_bPreparedFromCache = false;
 
         CEString sStmt = L"INSERT INTO ";
         sStmt += sTable;
@@ -1363,165 +1132,6 @@ public:
     
     }   // i_LastID (...)
 
-
-    //
-    //  Load DB to the memory
-    //
-
-public:
-    bool bLoadTables(const vector<CEString>& vecTables) //, CProgressCallback& Progress)
-    {
-        if (NULL == m_spDb_)
-        {
-            throw CException (-1, L"No DB handle");
-        }
-
-        m_mapTables.clear();
-        m_mapIndices.clear();
-        m_vecIdxParameters.clear();
-        m_vecIdxRows.clear();
-        m_vecRowResult.clear();
-        m_bPreparedFromCache = false;
-        vector<CEString>::const_iterator itTable = vecTables.begin();
-
-        __int64 llRowsToExport = 0;
-        for (itTable = vecTables.begin(); 
-             itTable != vecTables.end();
-             ++itTable)
-        {
-            llRowsToExport += llRows(*itTable);
-        }
-        
-        if (llRowsToExport < 1)
-        {
-            return true;
-        }
-
-        __int64 llRow = 0;
-        
-        for (vector<CEString>::const_iterator itTable = vecTables.begin(); 
-             itTable != vecTables.end();
-             ++itTable)
-        {
-            vector<CEString> vecColNames;
-            vector<map<CEString, CEString>> vecRows;
-            CEString sQuery(L"SELECT * FROM ");
-            sQuery += *itTable;
-            sQuery += L";";
-
-            sqlite3_stmt * pStmt = NULL;
-            int iRet = sqlite3_prepare16_v2(m_spDb_, sQuery, -1, &pStmt, NULL);
-            if (SQLITE_OK != iRet)
-            {
-                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
-            }
-
-            int iColumns = sqlite3_column_count(pStmt);
-            for (int iColName = 0; iColName < iColumns; ++iColName)
-            {
-                vecColNames.push_back((wchar_t *)sqlite3_column_name16(pStmt, iColName));
-            }
-
-            int iPercentDone = 0;
-            while (bGetRow(pStmt))
-            {
-                CEString sOut;
-                map<CEString, CEString> mapRow;
-                for (int iCol = 0; iCol < iColumns; ++iCol)
-                {
-                    CEString sCol;
-                    GetData(iCol, sCol, pStmt);
-                    mapRow.insert(pair<CEString, CEString>(vecColNames[iCol], sCol));
-                }
-                vecRows.push_back(mapRow);
-                
-                /*
-                int iPd = (int)(((double)llRow / (double)llRowsToExport) * 100);
-                if (iPd > iPercentDone)
-                {
-                    iPercentDone = min(iPd, 100);
-                    Progress(iPercentDone);
-                }
-                */
-
-                ++llRow;
-            }       //  while (...)
-            
-            m_mapTables.insert(pair<CEString, vector<map<CEString, CEString>>>(*itTable, vecRows));
-        }   //  for (vector<CEString> ...
-        return true;
-    }
-
-    void vDropTable(CEString sTable)
-    {
-        m_bPreparedFromCache = false;
-        m_vecRowResult.clear();
-        if (!m_mapTables.empty())
-        {
-            if (m_mapTables.count(sTable) > 0)
-            {
-                m_mapTables.erase(sTable);
-            }
-        }
-        if (!m_mapIndices.empty())
-        {
-            if (m_mapIndices.count(sTable) > 0)
-            {
-                for (map<CEString, int>::iterator itParameter = m_vecIdxParameters[m_mapIndices[sTable]].begin();
-                     itParameter != m_vecIdxParameters[m_mapIndices[sTable]].end();
-                     ++itParameter)
-                {
-                    m_vecIdxRows[itParameter->second].mmap.clear();
-                }
-                m_vecIdxParameters[m_mapIndices[sTable]].clear();
-                m_mapIndices.erase(sTable);
-            }
-        }
-    }
-
-    bool bCreateIndex(CEString sTable, CEString sCol)
-    {
-        m_bPreparedFromCache = false;
-        m_vecRowResult.clear();
-
-        if (m_mapTables.count(sTable) <= 0)
-        {
-            return false;
-        }
-        
-        stRowSetMap soIndex;
-        map<CEString, vector<map<CEString, CEString>>>::iterator itTable = m_mapTables.find(sTable);
-        for (vector<map<CEString, CEString>>::iterator itRows = itTable->second.begin();
-             itRows != itTable->second.end();
-             ++itRows)
-        {
-            if (itRows->count(sCol) <= 0)
-            {
-                return false;
-            }
-            soIndex.mmap.insert(pair<CEString, vector<map<CEString, CEString>>::iterator>((*itRows)[sCol], itRows));
-        }
-        m_vecIdxRows.push_back(soIndex);
-        if (m_mapIndices.count(sTable) > 0)
-        {
-            if (m_vecIdxParameters[m_mapIndices[sTable]].count(sCol) > 0)
-            {
-                m_vecIdxRows[m_vecIdxParameters[m_mapIndices[sTable]][sCol]].mmap.clear();
-                m_vecIdxParameters[m_mapIndices[sTable]][sCol] = m_vecIdxRows.size() - 1;
-            }
-            else
-            {
-                m_vecIdxParameters[m_mapIndices[sTable]].insert(pair<CEString, int>(sCol, m_vecIdxRows.size() - 1));
-            }
-        }
-        else
-        {
-            map<CEString, int> mapNewTableParameters;
-            mapNewTableParameters.insert(pair<CEString, int>(sCol, m_vecIdxRows.size() - 1));
-            m_vecIdxParameters.push_back(mapNewTableParameters);
-            m_mapIndices.insert(pair<CEString, int>(sTable, m_vecIdxParameters.size() - 1));
-        }
-        return true;
-    }
 };  //  class CSqlite
 
+#endif

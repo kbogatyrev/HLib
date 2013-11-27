@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\ThirdPartyLibs-Windows\Sqlite"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -114,6 +115,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\ThirdPartyLibs-Windows\Sqlite"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -171,26 +173,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\stdafx.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="2"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\StringTest.cpp"
 				>
 			</File>
@@ -202,6 +184,10 @@
 			>
 			<File
 				RelativePath=".\Callbacks.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Enums.h"
 				>
 			</File>
 			<File
@@ -221,6 +207,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GramHasher.h"
+				>
+			</File>
+			<File
 				RelativePath=".\LexemeHasher.h"
 				>
 			</File>
@@ -230,10 +220,6 @@
 			</File>
 			<File
 				RelativePath=".\SqliteWrapper.h"
-				>
-			</File>
-			<File
-				RelativePath=".\stdafx.h"
 				>
 			</File>
 			<File

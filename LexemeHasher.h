@@ -76,9 +76,8 @@ struct StLexemeHasher
                 sMsg = L"Apparent DB error ";
             }
         
-            CString csMsg;
-            csMsg.Format (sMsg, pDbHandle->iGetLastError());
-            ERROR_LOG ((LPCTSTR)csMsg);
+            sMsg + CEString::sToString(pDbHandle->iGetLastError());
+            ERROR_LOG (sMsg);
 
             return false;
         }

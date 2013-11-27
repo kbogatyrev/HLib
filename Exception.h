@@ -6,9 +6,6 @@ class CException
 {
     static const unsigned int cuiMaxTextLength = 5000;
 
-public:
-    enum EException;
-
 protected:
     int m_iErrorCode;
     wchar_t m_arrDescription[cuiMaxTextLength+1];
@@ -45,6 +42,7 @@ public:
     {
         return m_iErrorCode;
     }
+
     wchar_t * szGetDescription()
     {
         return m_arrDescription;
