@@ -1,6 +1,8 @@
 #pragma once
 
 #include "stdafx.h"
+#include "Enums.h"
+#include "ErrorHandlers.h"
 
 class CException
 {
