@@ -61,7 +61,7 @@ public:
             m_vecLog.push_back (sFormattedMsg);
         }
         
-        DebugTrace(sFormattedMsg.c_str());
+        DebugTrace(sFormattedMsg);
 //        ATLTRACE2(sFormattedMsg.c_str());
 //        ATLTRACE2(L"\r\n");
 
@@ -254,19 +254,18 @@ private:
 
     }   // bWriteLog()
 
-    void DebugTrace(const wstring& sMsg)
+    void DebugTrace(wstring& sMsg)
     {
 #ifdef _DEBUG
-        int iNewLength = sMsg.length() + 2;
+        sMsg += wstring(L"\r\n");
+        int iNewLength = sMsg.length();
         wchar_t * pTxt = new wchar_t[iNewLength+1];
-        errno_t err = wcscpy_s(pTxt, iNewLength, sMsg.c_str());
+        errno_t err = wcscpy_s(pTxt, iNewLength+1, sMsg.c_str());
         if (err)
         {
             _CrtDbgReportW(_CRT_ASSERT, _T(__FILE__), __LINE__, NULL, L"%s", L"DebugTrace(): msg formatting failed");
             return;
         }
-        pTxt[iNewLength-2] = L'\r';
-        pTxt[iNewLength-1] = L'\n';
         _CrtDbgReportW(_CRT_ASSERT, _T(__FILE__), __LINE__, NULL, L"%s", pTxt);
 #endif
     }
