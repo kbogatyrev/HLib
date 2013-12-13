@@ -1,7 +1,8 @@
 /**
 */
 
-#pragma once
+#ifndef ERRORHANDLERS_H_INCLUDED
+#define ERRORHANDLERS_H_INCLUDED
 
 #include <sstream>
 #include <strstream>
@@ -13,6 +14,7 @@
 #include <ctime>
 
 #include <crtdbg.h>
+#include <tchar.h>
 
 using namespace std;
 
@@ -199,7 +201,7 @@ private:
 
     bool bWriteLog (const wstring& sMsg)
     {
-        LPTSTR szName = _T("\\\\.\\pipe\\ZalConversionLog"); 
+        LPTSTR szName = L"\\\\.\\pipe\\ZalConversionLog"; 
   
         HANDLE hPipe = NULL;
         while (1) 
@@ -282,3 +284,5 @@ private:
 
 
 //#define ERROR_LOG(sMsg__) 
+
+#endif

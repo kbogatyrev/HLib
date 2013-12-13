@@ -1,4 +1,5 @@
-#pragma once
+#ifndef C_EXCEPTION_H_INCLUDED
+#define C_EXCEPTION_H_INCLUDED
 
 //#include "stdafx.h"
 #include <assert.h>
@@ -52,3 +53,5 @@ public:
     }
 
 };
+
+#endif

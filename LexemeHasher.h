@@ -1,6 +1,7 @@
-#pragma once
+#ifndef ST_LEXEME_HASHER_INCLUDED
+#define ST_LEXEME_HASHER_INCLUDED
 
-#include "stdafx.h"
+#include <map>
 #include "SqliteWrapper.h"
 #include "MD5.h"
 
@@ -88,3 +89,5 @@ struct StLexemeHasher
 
 
 };  //  struct StLexemeHasher
+
+#endif

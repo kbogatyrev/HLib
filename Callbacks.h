@@ -1,9 +1,8 @@
 /**
 */
 
-#pragma once
-
-#include "StdAfx.h"
+#ifndef CALLBACKS_H_INCLUDED
+#define CALLBACKS_H_INCLUDED
 
 using namespace std;
 
@@ -26,3 +25,5 @@ public:
     }
 
 };
+
+#endif

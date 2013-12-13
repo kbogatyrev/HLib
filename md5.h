@@ -1,6 +1,6 @@
-#pragma once
+#ifndef C_MD5_INCLUDED
+#define C_MD5_INCLUDED
 
-#include "StdAfx.h"
 #include <wincrypt.h>
 
 using namespace std;
@@ -87,3 +87,5 @@ public:
     }   //  Null()
 
 };
+
+#endif
