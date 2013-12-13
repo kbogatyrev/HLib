@@ -1,6 +1,7 @@
 #pragma once
 
-#include "stdafx.h"
+//#include "stdafx.h"
+#include <assert.h>
 #include "Enums.h"
 #include "ErrorHandlers.h"
 
@@ -30,7 +31,7 @@ public:
         errno_t error = wmemmove_s (m_arrDescription, cuiMaxTextLength, szDescription, iLength);                
         if (error)
         {
-            ATLASSERT(0);
+            assert(0);
             wchar_t * szMsg = L"wmemmove_s failed.";
             ERROR_LOG (szMsg);
         }

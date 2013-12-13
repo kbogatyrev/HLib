@@ -12,6 +12,8 @@
 #include <string>
 #include <ctime>
 
+#include <crtdbg.h>
+
 using namespace std;
 
 class CError;
@@ -58,8 +60,11 @@ public:
         {
             m_vecLog.push_back (sFormattedMsg);
         }
-        ATLTRACE2(sFormattedMsg.c_str());
-        ATLTRACE2(L"\r\n");
+        
+        DebugTrace(sFormattedMsg.c_str());
+//        ATLTRACE2(sFormattedMsg.c_str());
+//        ATLTRACE2(L"\r\n");
+
    }
 
     void Flush()
@@ -248,6 +253,23 @@ private:
         return uiRet ? true : false;
 
     }   // bWriteLog()
+
+    void DebugTrace(const wstring& sMsg)
+    {
+#ifdef _DEBUG
+        int iNewLength = sMsg.length() + 2;
+        wchar_t * pTxt = new wchar_t[iNewLength+1];
+        errno_t err = wcscpy_s(pTxt, iNewLength, sMsg.c_str());
+        if (err)
+        {
+            _CrtDbgReportW(_CRT_ASSERT, _T(__FILE__), __LINE__, NULL, L"%s", L"DebugTrace(): msg formatting failed");
+            return;
+        }
+        pTxt[iNewLength-2] = L'\r';
+        pTxt[iNewLength-1] = L'\n';
+        _CrtDbgReportW(_CRT_ASSERT, _T(__FILE__), __LINE__, NULL, L"%s", pTxt);
+#endif
+    }
 
 };
 
