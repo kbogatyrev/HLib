@@ -25,7 +25,13 @@ static CError * pError;
 class CError
 {
 public:
-    CError() {};
+    CError() 
+    {
+        _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG );
+        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG );
+        _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG );
+    };
+
     virtual ~CError() {};
     
     static CError * pGetInstance()
@@ -265,10 +271,10 @@ private:
         errno_t err = wcscpy_s(pTxt, iNewLength+1, sMsg.c_str());
         if (err)
         {
-            _CrtDbgReportW(_CRT_ASSERT, _T(__FILE__), __LINE__, NULL, L"%s", L"DebugTrace(): msg formatting failed");
+            _CrtDbgReportW(_CRT_ERROR, _T(__FILE__), __LINE__, NULL, L"%s", L"DebugTrace(): msg formatting failed");
             return;
         }
-        _CrtDbgReportW(_CRT_ASSERT, _T(__FILE__), __LINE__, NULL, L"%s", pTxt);
+        _CrtDbgReportW(_CRT_ERROR, _T(__FILE__), __LINE__, NULL, L"%s", pTxt);
 #endif
     }
 
