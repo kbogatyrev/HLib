@@ -297,7 +297,48 @@ public:
 
         return (unsigned int)pStmt;
     }
-   
+
+    void PrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns, __int64 llPrimaryKey)
+    {
+        uiPrepareForUpdate (sTable, vecColumns, llPrimaryKey, m_pStmt);
+    }
+
+    void PrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns)
+    {
+        uiPrepareForUpdate (sTable, vecColumns, -1, m_pStmt);
+    }
+
+    unsigned int uiPrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns, __int64 llPrimaryKey, sqlite3_stmt *& pStmt)
+    {
+        CEString sStmt = L"UPDATE ";
+        sStmt += sTable;
+        sStmt += L" SET ";
+        for (int iCol = 0; iCol < (int)vecColumns.size(); ++iCol)
+        {
+            if (iCol > 0)
+            {
+                sStmt += L", ";
+            }
+            sStmt += vecColumns[iCol];
+            sStmt += L"=";
+            sStmt += L"?";
+        }
+
+        if (llPrimaryKey > -1)
+        {
+            sStmt += L" WHERE ID = ";
+            sStmt += CEString::sToString(llPrimaryKey);
+        }
+
+        int iRet = sqlite3_prepare16_v2 (m_spDb_, sStmt, -1, &pStmt, NULL);
+        if (SQLITE_OK != iRet)
+        {
+            throw CException (iRet, L"sqlite3_prepare16_v2 failed");
+        }
+
+        return (unsigned int)pStmt;
+    }
+
     void Bind (int iColumn, bool bValue)
     {
         Bind (iColumn, bValue, m_pStmt);
@@ -427,7 +468,43 @@ public:
             throw CException (iRet, L"sqlite3_reset failed");
         }
 
-    }   // v_InsertRow()
+    }   // InsertRow()
+
+    void UpdateRow()
+    {
+        UpdateRow (m_pStmt);
+    }
+
+    void UpdateRow (unsigned int uiHandle)
+    {
+        UpdateRow ((sqlite3_stmt *)uiHandle);
+    }
+
+    void UpdateRow (sqlite3_stmt * pStmt)
+    {
+        if (NULL == m_spDb_)
+        {
+            throw CException (-1, L"No DB handle");
+        }
+
+        if (NULL == pStmt)
+        {
+            throw CException (-1, L"No statement");
+        }
+
+        int iRet = sqlite3_step (pStmt);
+        if (SQLITE_DONE != iRet)
+        {
+            throw CException (iRet, L"sqlite3_step failed");
+        }
+
+        iRet = sqlite3_reset (pStmt);
+        if (SQLITE_OK != iRet)
+        {
+            throw CException (iRet, L"sqlite3_reset failed");
+        }
+
+    }   // InsertRow()
 
     bool bGetRow()
     {
