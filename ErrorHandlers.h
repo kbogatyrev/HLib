@@ -283,11 +283,19 @@ private:
 
 #define ERROR_LOG(sMsg__) wstringstream io__; \
             io__ << __LINE__; \
-                wstring sLocation__ = wstring (_T(__FILE__)) + \
+            wstring sLocation__ = wstring (_T(__FILE__)) + \
                 wstring (_T("\t")) + io__.str() + wstring (_T("\t")) + wstring (_T(__FUNCTION__)); \
-                CError * pError = CError::pGetInstance(); \
-                pError->HandleError (sMsg__, sLocation__.c_str()); 
+            CError * pError = CError::pGetInstance(); \
+            pError->HandleError(sMsg__, sLocation__.c_str());
 
+#define ASSERT(bBoolExpr__) if (!(bBoolExpr__)) \
+    {\
+        wstringstream io__; \
+        wstring sLocation__ = wstring(_T(__FILE__)) + \
+        wstring(_T("\t")) + io__.str() + wstring(_T("\t")) + wstring(_T(__FUNCTION__)); \
+        CError * pError = CError::pGetInstance(); \
+        pError->HandleError(L"*** Assertion failed at ", sLocation__.c_str()); \
+    }
 
 //#define ERROR_LOG(sMsg__) 
 

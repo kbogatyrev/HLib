@@ -29,7 +29,7 @@ public:
         {
             if (m_spDb_)
             {
-                assert(0);
+                ASSERT(0);
                 throw CException (-1, L"DB is initialized but ref count is 0.");
             }
             int iRet = sqlite3_open16 (sDbPath, &m_spDb_);
@@ -957,7 +957,7 @@ public:
 
             if (sTable.bIsEmpty())
             {
-                assert(0);
+                ASSERT(0);
                 throw CException (-1, L"Empty table name.");
             }
 
@@ -993,7 +993,7 @@ public:
 
             if (sDescriptor.bIsEmpty())
             {
-                assert(0);
+                ASSERT(0);
                 throw CException (-1, L"Empty table descriptor.");
             }
 
