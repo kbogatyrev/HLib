@@ -25,15 +25,15 @@ static CError * pError;
 class CError
 {
 public:
-    CError() 
+    CError()
     {
-        _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG );
-        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG );
-        _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG );
+        _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
+        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+        _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
     };
 
     virtual ~CError() {};
-    
+
     static CError * pGetInstance()
     {
         if (pError)
@@ -50,16 +50,37 @@ private:
     vector<wstring> m_vecLog;
 
 public:
+    void DebugTrace(unsigned int uiType, const wchar_t * pwchrPath, const wchar_t * pwchrFunction, unsigned int uiLine, const wchar_t * pwchrMyMsg)
+    {
+#ifdef _DEBUG
+        wstring sTxt = wstring(pwchrMyMsg) + wstring(L"\r\n");
+        int iNewLength = sTxt.length();
+        wchar_t * pTxt = new wchar_t[iNewLength + 1];
+        errno_t err = wcscpy_s(pTxt, iNewLength + 1, sTxt.c_str());
+        if (!err)
+        {
+            _CrtDbgReportW(uiType, pwchrPath, uiLine, NULL, L"%s", pTxt);
+        }
+        else
+        {
+            _CrtDbgReportW(uiType, pwchrPath, uiLine, NULL, L"%s", L"DebugTrace(): msg formatting failed");
+        }
+#endif
+
+        wstringstream ioToString;
+        ioToString << uiLine;
+        wstring sLocation = wstring(pwchrPath) + wstring(_T("\t")) + ioToString.str() + wstring(_T("\t")) + wstring(pwchrFunction);
+        CError * pErrorHandler = CError::pGetInstance();
+        pErrorHandler->HandleError(pwchrMyMsg, sLocation.c_str());
+    }
+
     void HandleError (const wchar_t * szBriefDescription,
                       const wchar_t * szLocation,
                       const wchar_t * szDetailedDescription = L"",
                       int iErrCode = -1,
                       bool bWrite = false) 
     {
-        wstring sFormattedMsg = sFormat (szBriefDescription, 
-                                         szLocation, 
-                                         szDetailedDescription, 
-                                         iErrCode);
+        wstring sFormattedMsg = sFormat (szBriefDescription, szLocation, szDetailedDescription, iErrCode);
         if (bWrite)
         {
             bWriteLog (sFormattedMsg);
@@ -69,7 +90,7 @@ public:
             m_vecLog.push_back (sFormattedMsg);
         }
         
-        DebugTrace(sFormattedMsg);
+//        DebugTrace(sFormattedMsg);
 //        ATLTRACE2(sFormattedMsg.c_str());
 //        ATLTRACE2(L"\r\n");
 
@@ -262,41 +283,16 @@ private:
 
     }   // bWriteLog()
 
-    void DebugTrace(wstring& sMsg)
-    {
-#ifdef _DEBUG
-        sMsg += wstring(L"\r\n");
-        int iNewLength = sMsg.length();
-        wchar_t * pTxt = new wchar_t[iNewLength+1];
-        errno_t err = wcscpy_s(pTxt, iNewLength+1, sMsg.c_str());
-        if (err)
-        {
-            _CrtDbgReportW(_CRT_ERROR, _T(__FILE__), __LINE__, NULL, L"%s", L"DebugTrace(): msg formatting failed");
-            return;
-        }
-        _CrtDbgReportW(_CRT_ERROR, _T(__FILE__), __LINE__, NULL, L"%s", pTxt);
-#endif
-    }
-
 };
 
-
-#define ERROR_LOG(sMsg__) wstringstream io__; \
-            io__ << __LINE__; \
-            wstring sLocation__ = wstring (_T(__FILE__)) + \
-                wstring (_T("\t")) + io__.str() + wstring (_T("\t")) + wstring (_T(__FUNCTION__)); \
-            CError * pError = CError::pGetInstance(); \
-            pError->HandleError(sMsg__, sLocation__.c_str());
+#define ERROR_LOG(sMsg__) \
+    CError * pErrorHandler__ = CError::pGetInstance(); \
+    pErrorHandler__->DebugTrace(_CRT_ERROR, _T(__FILE__), _T(__FUNCTION__), __LINE__, sMsg__);
 
 #define ASSERT(bBoolExpr__) if (!(bBoolExpr__)) \
     {\
-        wstringstream io__; \
-        wstring sLocation__ = wstring(_T(__FILE__)) + \
-        wstring(_T("\t")) + io__.str() + wstring(_T("\t")) + wstring(_T(__FUNCTION__)); \
-        CError * pError = CError::pGetInstance(); \
-        pError->HandleError(L"*** Assertion failed at ", sLocation__.c_str()); \
+        CError * pErrorHandler__ = CError::pGetInstance(); \
+        pErrorHandler__->DebugTrace(_CRT_ERROR, _T(__FILE__), _T(__FUNCTION__), __LINE__, L"Assertion failed."); \
     }
-
-//#define ERROR_LOG(sMsg__) 
 
 #endif
