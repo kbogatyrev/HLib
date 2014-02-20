@@ -5,6 +5,9 @@
 #include "SqliteWrapper.h"
 #include "MD5.h"
 
+namespace Hlib
+{
+
 struct StLexemeHasher
 {
     map<int, ET_StressType> mapStress;
@@ -89,5 +92,7 @@ struct StLexemeHasher
 
 
 };  //  struct StLexemeHasher
+
+}   //  namespace Hlib
 
 #endif

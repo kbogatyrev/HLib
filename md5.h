@@ -5,6 +5,9 @@
 
 using namespace std;
 
+namespace Hlib
+{
+
 class CMD5
 {
 
@@ -87,5 +90,7 @@ public:
     }   //  Null()
 
 };
+
+}   //  namespace Hlib
 
 #endif
