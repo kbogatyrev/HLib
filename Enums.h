@@ -1,9 +1,8 @@
 #ifndef ENUMS_H_INCLUDED
 #define ENUMS_H_INCLUDED
 
-//
-// C-Style declarations
-//
+namespace Hlib
+{
 
 typedef enum ET_Ternary
 {
@@ -30,7 +29,7 @@ typedef enum ET_ReturnCode
 }   ET_Error;
 
 typedef enum ET_PartOfSpeech
-{    
+{
     POS_UNDEFINED,
     POS_NOUN,
     POS_VERB,
@@ -54,14 +53,14 @@ typedef enum ET_PartOfSpeech
 }     ET_PartOfSpeech;
 
 typedef enum ET_InflectionType
-{    
-    INFLECTION_TYPE_UNDEFINED    = -1,
-    CONJUGATIONS_COUNT    = 16
+{
+    INFLECTION_TYPE_UNDEFINED = -1,
+    CONJUGATIONS_COUNT = 16
 
 }     ET_InflectionType;
 
 typedef enum ET_Case
-{    
+{
     CASE_UNDEFINED,
     CASE_NOM,
     CASE_ACC,
@@ -77,7 +76,7 @@ typedef enum ET_Case
 }     ET_Case;
 
 typedef enum ET_Number
-{    
+{
     NUM_UNDEFINED,
     NUM_SG,
     NUM_PL,
@@ -86,7 +85,7 @@ typedef enum ET_Number
 }     ET_Number;
 
 typedef enum ET_Subparadigm
-{    
+{
     SUBPARADIGM_UNDEFINED,
     SUBPARADIGM_NOUN,
     SUBPARADIGM_SHORT_ADJ,
@@ -109,7 +108,7 @@ typedef enum ET_Subparadigm
 }     ET_Subparadigm;
 
 typedef enum ET_Gender
-{    
+{
     GENDER_UNDEFINED,
     GENDER_M,
     GENDER_F,
@@ -119,7 +118,7 @@ typedef enum ET_Gender
 }     ET_Gender;
 
 typedef enum ET_Aspect
-{    
+{
     ASPECT_UNDEFINED,
     ASPECT_IMPERFECTIVE,
     ASPECT_PERFECTIVE,
@@ -128,7 +127,7 @@ typedef enum ET_Aspect
 }     ET_Aspect;
 
 typedef enum ET_Person
-{    
+{
     PERSON_UNDEFINED,
     PERSON_1,
     PERSON_2,
@@ -138,7 +137,7 @@ typedef enum ET_Person
 }     ET_Person;
 
 typedef enum ET_Animacy
-{    
+{
     ANIM_UNDEFINED,
     ANIM_YES,
     ANIM_NO,
@@ -147,25 +146,25 @@ typedef enum ET_Animacy
 }     ET_Animacy;
 
 typedef enum ET_Voice
-{    
+{
     VOICE_UNDEFINED,
     VOICE_ACTIVE,
     VOICE_PASSIVE,
-    VOICE_COUNT 
+    VOICE_COUNT
 
 }     ET_Voice;
 
 typedef enum ET_Reflexive
-{    
+{
     REFL_UNDEFINED,
     REFL_YES,
     REFL_NO,
-    REFL_COUNT 
+    REFL_COUNT
 
 }     ET_Reflexive;
 
 typedef enum ET_AccentType
-{    
+{
     AT_UNDEFINED,
     AT_A,
     AT_A1,
@@ -180,12 +179,12 @@ typedef enum ET_AccentType
     AT_F,
     AT_F1,
     AT_F2,
-    AT_COUNT 
+    AT_COUNT
 
 }     ET_AccentType;
 
 typedef enum ET_EndingClass
-{    
+{
     ENDING_CLASS_UNDEFINED,
     ENDING_CLASS_NOUN,
     ENDING_CLASS_ADJECTIVE,
@@ -193,12 +192,13 @@ typedef enum ET_EndingClass
     ENDING_CLASS_SHORT_ADJECTIVE,
     ENDING_CLASS_PRESENT_TENSE,
     ENDING_CLASS_PAST_TENSE,
+    ENDING_CLASS_COMPARATIVE,
     ENDING_CLASS_COUNT
 
 }     ET_EndingClass;
 
 typedef enum ET_StressLocation
-{    
+{
     STRESS_LOCATION_UNDEFINED,
     STRESS_LOCATION_STEM,
     STRESS_LOCATION_ENDING,
@@ -207,7 +207,7 @@ typedef enum ET_StressLocation
 }     ET_StressLocation;
 
 typedef enum ET_StressType
-{    
+{
     STRESS_TYPE_UNDEFINED,
     STRESS_PRIMARY,
     STRESS_SECONDARY,
@@ -216,16 +216,16 @@ typedef enum ET_StressType
 }     ET_StressType;
 
 typedef enum ET_StemAuslaut
-{    
+{
     STEM_AUSLAUT_UNDEFINED,
     STEM_AUSLAUT_SH,
     STEM_AUSLAUT_NOT_SH,
-    STEM_AUSLAUT_COUNT 
+    STEM_AUSLAUT_COUNT
 
 }     ET_StemAuslaut;
 
 typedef enum ET_Status
-{    
+{
     STATUS_UNDEFINED,
     STATUS_COMMON,
     STATUS_OBSOLETE,
@@ -237,7 +237,7 @@ typedef enum ET_Status
 }     ET_Status;
 
 typedef enum ET_TestResult
-{    
+{
     TEST_RESULT_UNDEFINED,
     TEST_RESULT_OK,
     TEST_RESULT_FAIL,
@@ -245,5 +245,7 @@ typedef enum ET_TestResult
     TEST_RESULT_COUNT
 
 }     ET_TestResult;
+
+}   // namespace Hlib
 
 #endif // ENUMS_H_INCLUDED

@@ -94,18 +94,14 @@
   <ItemGroup>
     <ClInclude Include="Callbacks.h" />
     <ClInclude Include="Enums.h" />
-    <ClInclude Include="ErrorHandlers.h" />
+    <ClInclude Include="Logging.h" />
     <ClInclude Include="EString.h" />
     <ClInclude Include="Exception.h" />
-    <ClInclude Include="Globals.h" />
     <ClInclude Include="GramHasher.h" />
     <ClInclude Include="LexemeHasher.h" />
     <ClInclude Include="md5.h" />
     <ClInclude Include="SqliteWrapper.h" />
     <ClInclude Include="targetver.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="ReadMe.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

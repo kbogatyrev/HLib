@@ -6,9 +6,12 @@
 
 using namespace std;
 
+namespace Hlib
+{
+
 class CProgressCallback
 {
-//private:
+    //private:
 
 public:
     CProgressCallback()
@@ -18,12 +21,15 @@ public:
     ~CProgressCallback()
     {
     }
-    
-    virtual int operator()(int iPercentDone) const 
-    { 
-        return iPercentDone; 
+
+    virtual int operator()(int iPercentDone) const
+    {
+        cout << iPercentDone << endl;
+        return iPercentDone;
     }
 
 };
+
+}   //  namespace Hlib
 
 #endif

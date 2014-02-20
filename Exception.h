@@ -4,7 +4,10 @@
 //#include "stdafx.h"
 //#include <ASSERT.h>
 #include "Enums.h"
-#include "ErrorHandlers.h"
+#include "Logging.h"
+
+namespace Hlib
+{
 
 class CException
 {
@@ -20,13 +23,10 @@ public:
 // C-tors and d-tors
 //
 public:
-    CException()
-    {
-        m_iErrorCode = -1;
-    };
+    CException() : m_iErrorCode(-1)
+    {}
 
-    CException (int iErrorCode, const wchar_t * szDescription)
-        : m_iErrorCode (iErrorCode)
+    CException (int iErrorCode, const wchar_t * szDescription) : m_iErrorCode (iErrorCode)
     {
         int iLength = min (wcslen (szDescription), cuiMaxTextLength);
         errno_t error = wmemmove_s (m_arrDescription, cuiMaxTextLength, szDescription, iLength);                
@@ -53,5 +53,8 @@ public:
     }
 
 };
+
+
+}   //  namespace Hlib
 
 #endif
