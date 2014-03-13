@@ -16,6 +16,9 @@
 #include <crtdbg.h>
 #include <tchar.h>
 
+#include <Windows.h>
+#include <Commdlg.h>
+
 using namespace std;
 
 namespace Hlib
