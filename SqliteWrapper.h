@@ -117,9 +117,12 @@ namespace Hlib
             {
                 throw CException (-1, L"No DB handle");
             }
-
             int iRet = SQLITE_OK;
-            iRet = sqlite3_prepare16_v2 (m_spDb_, L"BEGIN;", -1, &pStmt, NULL);
+            iRet = sqlite3_exec(m_spDb_, "BEGIN TRANSACTION;", NULL, NULL, NULL);
+
+            /*
+            int iRet = SQLITE_OK;
+            iRet = sqlite3_prepare16_v2 (m_spDb_, L"BEGIN;", -1, NULL, NULL);
             if (SQLITE_OK != iRet) 
             {
                 throw CException (iRet, L"sqlite3_prepare16_v2 failed");
@@ -132,9 +135,10 @@ namespace Hlib
             }
 
             iRet = sqlite3_finalize (pStmt);
+*/
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_finalize failed");
+                throw CException (iRet, L"sqlite3_exec failed for transaction start");
             }
         }
 
@@ -156,7 +160,10 @@ namespace Hlib
             }
 
             int iRet = SQLITE_OK;
-            iRet = sqlite3_prepare16_v2 (m_spDb_, L"COMMIT;", -1, &pStmt, NULL);
+            iRet = sqlite3_exec(m_spDb_, "END TRANSACTION;", NULL, NULL, NULL);
+
+/*
+            iRet = sqlite3_prepare16_v2(m_spDb_, L"COMMIT;", -1, NULL, NULL);
             if (SQLITE_OK != iRet) 
             {
                 throw CException (iRet, L"sqlite3_prepare16_v2 failed");
@@ -169,9 +176,10 @@ namespace Hlib
             }
 
             iRet = sqlite3_finalize (pStmt);
+*/
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_finalize failed");
+                throw CException (iRet, L"sqlite3_exec failed for transaction end");
             }
     
         }   //  CommitTransaction (...)
@@ -249,19 +257,19 @@ namespace Hlib
         }   // v_Exec()
     */
 
-        void PrepareForSelect (const CEString& sStmt)
+        void PrepareForSelect (const CEString& sStmt, bool bIgnoreOnConflict = false)
         {
             PrepareForSelect (sStmt, m_pStmt);
         }
 
-        unsigned int uiPrepareForSelect (const CEString& sStmt)
+        unsigned int uiPrepareForSelect(const CEString& sStmt, bool bIgnoreOnConflict = false)
         {
             sqlite3_stmt * pStmt = NULL;
             PrepareForSelect (sStmt, pStmt);
             return (unsigned int)pStmt;
         }
 
-        void PrepareForSelect (const CEString& sStmt, sqlite3_stmt *& pStmt)
+        void PrepareForSelect(const CEString& sStmt, sqlite3_stmt *& pStmt)
         {
             int iRet = sqlite3_prepare16_v2 (m_spDb_, sStmt, -1, &pStmt, NULL);
             if (SQLITE_OK != iRet)
@@ -270,14 +278,20 @@ namespace Hlib
             }
         }
 
-        void PrepareForInsert (const CEString& sTable, int iColumns)
+        void PrepareForInsert (const CEString& sTable, int iColumns, bool bIgnoreOnConflict = false)
         {
-            uiPrepareForInsert (sTable, iColumns, m_pStmt);
+            uiPrepareForInsert (sTable, iColumns, m_pStmt, bIgnoreOnConflict);
         }
 
-        unsigned int uiPrepareForInsert (const CEString& sTable, int iColumns, sqlite3_stmt *& pStmt)
+        unsigned int uiPrepareForInsert (const CEString& sTable, int iColumns, sqlite3_stmt *& pStmt, bool bIgnoreOnConflict = false)
         {
-            CEString sStmt = L"INSERT INTO ";
+            CEString sStmt(L"INSERT ");
+            if (bIgnoreOnConflict)
+            {
+                sStmt += L"OR IGNORE ";
+            }
+
+            sStmt += L"INTO ";
             sStmt += sTable;
             sStmt += L" VALUES (NULL, ";
             for (int iCol = 0; iCol < iColumns; ++iCol)
