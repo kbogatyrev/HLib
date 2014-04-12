@@ -24,7 +24,9 @@ typedef enum ET_ReturnCode
     H_ERROR_INVALID_ARG,
     H_ERROR_DB,
     H_EXCEPTION,            // an exception was caught and handled upstream
-    H_CTOR                  // exception thrown from a ctor
+    H_CTOR,                 // exception thrown from a ctor
+    H_NOTIMPL,              // interface method not implemented (but may be in the future)
+    H_UNAVAILABLE           // interface method not implemented (and never will be) for this consumer
 
 }   ET_Error;
 

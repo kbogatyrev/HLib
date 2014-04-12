@@ -233,21 +233,24 @@ private:
         return sMsg;
     
     }    //  str_Format_ (...)
+    public:
 
-    bool bWriteLog (const wstring& sMsg)
+    static bool bWriteLog (const wstring& sMsg)
     {
         const wchar_t * pchrName = L"\\\\.\\pipe\\HMessageLog"; 
   
         HANDLE hPipe = NULL;
         while (1) 
         { 
-            hPipe = CreateFile (pchrName,
-                                GENERIC_WRITE,
-                                0,              // no sharing 
-                                NULL,           // default security attributes
-                                OPEN_EXISTING,  // opens existing pipe 
-                                0,              // default attributes 
-                                NULL);          // no template file 
+            hPipe = CreateNamedPipe( 
+            pchrName,
+            PIPE_ACCESS_OUTBOUND,
+            PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+            1,
+            512,
+            512,
+            0,
+            NULL);
  
             if (INVALID_HANDLE_VALUE != hPipe) 
             {
@@ -279,6 +282,7 @@ private:
    }
 */
 
+        BOOL python = ConnectNamedPipe(hPipe, NULL);
         DWORD dwWritten = 0;
         UINT uiRet = WriteFile (hPipe,            // pipe handle 
                                 sMsg.c_str(),   // message 
