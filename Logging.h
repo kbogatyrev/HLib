@@ -1,8 +1,8 @@
 /**
 */
 
-#ifndef ERRORHANDLERS_H_INCLUDED
-#define ERRORHANDLERS_H_INCLUDED
+#ifndef LOGGING_H_INCLUDED
+#define LOGGING_H_INCLUDED
 
 #include <sstream>
 #include <strstream>
