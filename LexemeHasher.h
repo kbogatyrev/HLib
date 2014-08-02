@@ -80,7 +80,7 @@ struct StLexemeHasher
                 sMsg = L"Apparent DB error ";
             }
         
-            sMsg + CEString::sToString(pDbHandle->iGetLastError());
+            sMsg += CEString::sToString(pDbHandle->iGetLastError());
             ERROR_LOG (sMsg);
 
             return false;

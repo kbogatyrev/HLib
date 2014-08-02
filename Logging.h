@@ -227,7 +227,7 @@ private:
         if (szDetailedDescription)
         {
             sMsg += L"\t";
-            sMsg + szDetailedDescription;
+            sMsg += szDetailedDescription;
         }
 
         return sMsg;

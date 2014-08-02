@@ -101,41 +101,15 @@ namespace Hlib
             }
         }
 
-        void BeginTransaction()
-        {
-            BeginTransaction (m_pStmt);
-        }
-
-        void BeginTransaction (unsigned int uiHandle)
-        {
-            BeginTransaction ((sqlite3_stmt *)uiHandle);
-        }
-
-        void BeginTransaction (sqlite3_stmt * pStmt)
+        void BeginTransaction ()
         {
             if (NULL == m_spDb_)
             {
                 throw CException (-1, L"No DB handle");
             }
+
             int iRet = SQLITE_OK;
-            iRet = sqlite3_exec(m_spDb_, "BEGIN TRANSACTION;", NULL, NULL, NULL);
-
-            /*
-            int iRet = SQLITE_OK;
-            iRet = sqlite3_prepare16_v2 (m_spDb_, L"BEGIN;", -1, NULL, NULL);
-            if (SQLITE_OK != iRet) 
-            {
-                throw CException (iRet, L"sqlite3_prepare16_v2 failed");
-            }
-
-            iRet = sqlite3_step (pStmt);
-            if (SQLITE_DONE != iRet) 
-            {
-                throw CException (iRet, L"sqlite3_step failed");
-            }
-
-            iRet = sqlite3_finalize (pStmt);
-*/
+            iRet = sqlite3_exec(m_spDb_, "BEGIN TRANSACTION", NULL, NULL, NULL);
             if (SQLITE_OK != iRet)
             {
                 throw CException (iRet, L"sqlite3_exec failed for transaction start");
@@ -144,39 +118,13 @@ namespace Hlib
 
         void CommitTransaction()
         {
-            CommitTransaction (m_pStmt);
-        }
-
-        void CommitTransaction (unsigned int uiHandle)
-        {
-            CommitTransaction ((sqlite3_stmt *)uiHandle);
-        }
-
-        void CommitTransaction (sqlite3_stmt * pStmt)
-        {
             if (NULL == m_spDb_)
             {
                 throw CException (-1, L"No DB handle");
             }
 
             int iRet = SQLITE_OK;
-            iRet = sqlite3_exec(m_spDb_, "END TRANSACTION;", NULL, NULL, NULL);
-
-/*
-            iRet = sqlite3_prepare16_v2(m_spDb_, L"COMMIT;", -1, NULL, NULL);
-            if (SQLITE_OK != iRet) 
-            {
-                throw CException (iRet, L"sqlite3_prepare16_v2 failed");
-            }
-
-            iRet = sqlite3_step (pStmt);
-            if (SQLITE_DONE != iRet) 
-            {
-                throw CException (iRet, L"sqlite3_step failed");
-            }
-
-            iRet = sqlite3_finalize (pStmt);
-*/
+            iRet = sqlite3_exec(m_spDb_, "END TRANSACTION", NULL, NULL, NULL);
             if (SQLITE_OK != iRet)
             {
                 throw CException (iRet, L"sqlite3_exec failed for transaction end");
@@ -186,76 +134,18 @@ namespace Hlib
 
         void RollbackTransaction()
         {
-            RollbackTransaction (m_pStmt);
-        }
-
-        void RollbackTransaction (unsigned int uiHandle)
-        {
-            RollbackTransaction ((sqlite3_stmt *)uiHandle);
-        }
-
-        void RollbackTransaction (sqlite3_stmt * pStmt)
-        {
             if (NULL == m_spDb_)
             {
-                throw CException (-1, L"No DB handle");
+                throw CException(-1, L"No DB handle");
             }
 
             int iRet = SQLITE_OK;
-            iRet = sqlite3_prepare16_v2 (m_spDb_, L"ROLLBACK;", -1, &pStmt, NULL);
-            if (SQLITE_OK != iRet) 
-            {
-                throw CException (iRet, L"sqlite3_prepare16_v2 failed");
-            }
-
-	        iRet = sqlite3_step (pStmt);
-	        if (SQLITE_DONE != iRet) 
-            {
-                throw CException (iRet, L"sqlite3_step failed");
-            }
-
-	        iRet = sqlite3_finalize (pStmt);
+            iRet = sqlite3_exec(m_spDb_, "END TRANSACTION;", NULL, NULL, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_finalize failed");
+                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
             }
-    
-        }   //  RollbackTransaction (...)
-
-    /*
-        void v_Exec (const wstring& sStmt, void (*v_Callback_)(sqlite3_stmt*, void*), void* po_Arguments)
-        {
-            if (NULL == m_spDb_)
-            {
-                throw CException (-1, L"No DB handle");
-            }
-
-            int iRet = SQLITE_OK;
-            iRet = sqlite3_prepare16_v2 (m_spDb_, sStmt.c_str(), -1, &m_pStmt, NULL);
-            if (SQLITE_OK != iRet) 
-            {
-                throw CException (iRet, L"sqlite3_prepare16_v2 failed");
-            }
-
-            iRet = sqlite3_step (m_pStmt);
-            while (iRet == SQLITE_ROW) 
-            {
-                (*v_Callback_)(m_pStmt, po_Arguments);
-                iRet = sqlite3_step (m_pStmt);
-            }
-            if (SQLITE_ROW != iRet && SQLITE_DONE != iRet) 
-            {
-                throw CException (iRet, L"sqlite3_step failed");
-            }
-
-            iRet = sqlite3_finalize (m_pStmt);
-            if (SQLITE_OK != iRet)
-            {
-                throw CException (iRet, L"sqlite3_finalize failed");
-            }
-
-        }   // v_Exec()
-    */
+        }
 
         void PrepareForSelect (const CEString& sStmt, bool bIgnoreOnConflict = false)
         {
@@ -1131,7 +1021,7 @@ namespace Hlib
 
             sqlite3_stmt * pStmt = NULL;
 
-            BeginTransaction (pStmt);
+            BeginTransaction();
        
             CEString sSeparators (SZ_SEPARATOR);
             sSeparators += L", \n";
@@ -1196,7 +1086,7 @@ namespace Hlib
 
             }   //  for (; !feof (ioInstream); ++iEntriesRead)
 
-            CommitTransaction (pStmt);
+            CommitTransaction();
 
             return true;
 
@@ -1205,9 +1095,9 @@ namespace Hlib
         int iLastID (const CEString& sTableName)     // returns the ID of the last entry in the table
         {
             int iLastId = 0;
-            CEString sQuery = L"Select * from " + sTableName 
-                + L" as a0 where not exists (select * from " + sTableName 
-                + L" as a1 where a1.id > a0.id)";
+            CEString sQuery = L"SELECT * FROM " + sTableName 
+                + L" AS a0 WHERE NOT EXIST (SELECT * FROM " + sTableName 
+                + L" AS a1 WHERE a1.id > a0.id)";
             PrepareForSelect (sQuery);
             if (bGetRow())
             {
