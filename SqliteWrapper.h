@@ -543,6 +543,30 @@ namespace Hlib
             }
         }
 
+        void Exec(const CEString& sQuery)
+        {
+            size_t charsConverted = 0;
+            int iMaxUtf8SizeInBytes = 2 * sQuery.uiLength() + 1;
+
+            char * pchrUtf8Query = new char(iMaxUtf8SizeInBytes);
+            if (NULL == pchrUtf8Query)
+            {
+                throw CException(H_ERROR_POINTER, L"Unable to allocate memory.");
+            }
+
+            errno_t errorCode = wcstombs_s(&charsConverted, pchrUtf8Query, iMaxUtf8SizeInBytes, sQuery, sQuery.uiLength());
+            if (errorCode != 0 || charsConverted != sQuery.uiLength())
+            {
+                throw CException(H_ERROR_POINTER, L"UTF-16 to URF-8 conversion error or bad query string.");
+            }
+
+            int iRet = sqlite3_exec(m_spDb_, pchrUtf8Query, NULL, NULL, NULL);
+            if (SQLITE_OK != iRet)
+            {
+                throw CException(iRet, L"sqlite3_finalize failed");
+            }
+        }
+
         __int64 llGetLastKey()
         {
             return llGetLastKey (m_pStmt);
