@@ -706,9 +706,7 @@ namespace Hlib
 
         }   //  llRows (...)
 
-        bool bExportTables (const CEString& sPath,
-                            const vector<CEString>& vecTables,
-                            CProgressCallback& Progress)
+        bool bExportTables (const CEString& sPath, const vector<CEString>& vecTables, CProgressCallback& Progress)
         {
             if (NULL == m_spDb_)
             {
@@ -833,8 +831,7 @@ namespace Hlib
         //
         // Note: existing tables will be overwritten
         //
-        bool bImportTables (const CEString& sPath, 
-                            CProgressCallback& Progress)
+        bool bImportTables (const CEString& sPath, CProgressCallback& Progress)
         {
             if (NULL == m_spDb_)
             {

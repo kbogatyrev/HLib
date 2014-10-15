@@ -30,6 +30,16 @@ namespace Hlib
 
     }   ET_Error;
 
+    class CErrorCode
+    {
+    public:
+        static bool bError(ET_ReturnCode eRc)
+        {
+            if ((int)eRc >= 0) return false;
+            return true;
+        }
+    };
+
     typedef enum ET_PartOfSpeech
     {
         POS_UNDEFINED,
