@@ -232,6 +232,8 @@ namespace Hlib
         STEM_AUSLAUT_UNDEFINED,
         STEM_AUSLAUT_SH,
         STEM_AUSLAUT_NOT_SH,
+        STEM_AUSLAUT_CONSONANT,
+        STEM_AUSLAUT_NOT_CONSONANT,
         STEM_AUSLAUT_COUNT
 
     }     ET_StemAuslaut;
