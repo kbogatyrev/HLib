@@ -67,7 +67,8 @@ namespace Hlib
     typedef enum ET_InflectionType
     {
         INFLECTION_TYPE_UNDEFINED = -1,
-        CONJUGATIONS_COUNT = 16
+        CONJUGATIONS_COUNT = 16,
+        INFLECTION_TYPE_COUNT = 16
 
     }     ET_InflectionType;
 
@@ -203,6 +204,7 @@ namespace Hlib
         ENDING_CLASS_PRONOUN,
         ENDING_CLASS_SHORT_ADJECTIVE,
         ENDING_CLASS_PRESENT_TENSE,
+        ENDING_CLASS_INFINITIVE,
         ENDING_CLASS_PAST_TENSE,
         ENDING_CLASS_COMPARATIVE,
         ENDING_CLASS_COUNT
