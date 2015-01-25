@@ -492,10 +492,40 @@ namespace Hlib
 
         void GetData (int iColumn, __int64& ll_value, sqlite3_stmt * pStmt)
         {
-            ll_value = sqlite3_column_int64 (pStmt, iColumn);
+            ll_value = (unsigned __int64)sqlite3_column_int64 (pStmt, iColumn);
         }
 
-        void GetData (int iColumn, CEString& sValue)
+        void GetData(int iColumn, unsigned int& uiValue)
+        {
+            GetData(iColumn, uiValue, m_pStmt);
+        }
+
+        void GetData(int iColumn, unsigned int& uiValue, unsigned int uiHandle)
+        {
+            GetData(iColumn, uiValue, (sqlite3_stmt *)uiHandle);
+        }
+
+        void GetData(int iColumn, unsigned int& uiValue, sqlite3_stmt * pStmt)
+        {
+            uiValue = sqlite3_column_int(pStmt, iColumn);
+        }
+
+        void GetData(int iColumn, unsigned __int64& ull_value)
+        {
+            GetData(iColumn, ull_value, m_pStmt);
+        }
+
+        void GetData(int iColumn, unsigned __int64& ull_value, unsigned int uiHandle)
+        {
+            GetData(iColumn, ull_value, (sqlite3_stmt *)uiHandle);
+        }
+
+        void GetData(int iColumn, unsigned __int64& ull_value, sqlite3_stmt * pStmt)
+        {
+            ull_value = sqlite3_column_int64(pStmt, iColumn);
+        }
+
+        void GetData(int iColumn, CEString& sValue)
         {
             GetData (iColumn, sValue, m_pStmt);
         }
