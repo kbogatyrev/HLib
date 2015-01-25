@@ -72,6 +72,15 @@ namespace Hlib
 
     }     ET_InflectionType;
 
+    typedef enum ET_Conjugation
+    {
+        CONJUGATION_UNDEFINED,
+        E_VERB,
+        I_VERB,
+        CONJUGATION_COUNT
+
+    }     ET_Conjugation;
+
     typedef enum ET_Case
     {
         CASE_UNDEFINED,
@@ -200,12 +209,13 @@ namespace Hlib
     {
         ENDING_CLASS_UNDEFINED,
         ENDING_CLASS_NOUN,
-        ENDING_CLASS_ADJECTIVE,
+        ENDING_CLASS_LONG_ADJECTIVE,
         ENDING_CLASS_PRONOUN,
         ENDING_CLASS_SHORT_ADJECTIVE,
         ENDING_CLASS_PRESENT_TENSE,
         ENDING_CLASS_INFINITIVE,
         ENDING_CLASS_PAST_TENSE,
+        ENDING_CLASS_IMPERATIVE,
         ENDING_CLASS_COMPARATIVE,
         ENDING_CLASS_COUNT
 
@@ -239,6 +249,13 @@ namespace Hlib
         STEM_AUSLAUT_COUNT
 
     }     ET_StemAuslaut;
+
+    typedef enum ET_StemAugment
+    {
+        STEM_AUGMENT_UNDEFINED,
+        STEM_AUGMENT_COUNT = 4
+
+    }     ET_StemAugment;
 
     typedef enum ET_Status
     {
