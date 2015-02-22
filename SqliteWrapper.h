@@ -10,6 +10,9 @@ static const wchar_t * SZ_SEPARATOR = L"|";
 
 namespace Hlib
 {
+    // Progress delegate invoked from C#/CLR
+    typedef void(__stdcall *PROGRESS_CALLBACK_CLR) (int iPercentDone);
+
     class CSqlite
     {
     private:
@@ -578,14 +581,14 @@ namespace Hlib
             size_t charsConverted = 0;
             int iMaxUtf8SizeInBytes = 2 * sQuery.uiLength() + 1;
 
-            char * pchrUtf8Query = new char(iMaxUtf8SizeInBytes);
+            char * pchrUtf8Query = new char[iMaxUtf8SizeInBytes];
             if (NULL == pchrUtf8Query)
             {
                 throw CException(H_ERROR_POINTER, L"Unable to allocate memory.");
             }
 
             errno_t errorCode = wcstombs_s(&charsConverted, pchrUtf8Query, iMaxUtf8SizeInBytes, sQuery, sQuery.uiLength());
-            if (errorCode != 0 || charsConverted != sQuery.uiLength())
+            if (errorCode != 0)
             {
                 throw CException(H_ERROR_POINTER, L"UTF-16 to URF-8 conversion error or bad query string.");
             }
@@ -595,6 +598,8 @@ namespace Hlib
             {
                 throw CException(iRet, L"sqlite3_finalize failed");
             }
+
+            delete[] pchrUtf8Query;
         }
 
         __int64 llGetLastKey()
@@ -736,7 +741,7 @@ namespace Hlib
 
         }   //  llRows (...)
 
-        bool bExportTables (const CEString& sPath, const vector<CEString>& vecTables, CProgressCallback& Progress)
+        bool bExportTables(const CEString& sPath, const vector<CEString>& vecTables, PROGRESS_CALLBACK_CLR pProgress)
         {
             if (NULL == m_spDb_)
             {
@@ -837,7 +842,7 @@ namespace Hlib
                     if (iPd > iPercentDone)
                     {
                         iPercentDone = min (iPd, 100);
-                        Progress (iPercentDone);
+                        pProgress (iPercentDone);
                     }
 
                     ++llRow;
@@ -854,6 +859,8 @@ namespace Hlib
 
             fclose (ioOutStream);
 
+            pProgress(100);
+
             return true;
 
         }   //  ExportTables (...)
@@ -861,7 +868,7 @@ namespace Hlib
         //
         // Note: existing tables will be overwritten
         //
-        bool bImportTables (const CEString& sPath, CProgressCallback& Progress)
+        bool bImportTables(const CEString& sPath, bool bAutoincrement, PROGRESS_CALLBACK_CLR pProgress)
         {
             if (NULL == m_spDb_)
             {
@@ -953,14 +960,24 @@ namespace Hlib
                     throw CException (-1, L"Empty table descriptor.");
                 }
 
-                int iColumns = 0;
-                bool bRet = bCreateImportTable (sTable, sDescriptor, iColumns);
-                if (!bRet)
+                CEString sSeparators(SZ_SEPARATOR);
+                sSeparators += L", \n";
+                CEString sHeader(sDescriptor);
+                sHeader.SetBreakChars(SZ_SEPARATOR);
+                if (sHeader.uiGetNumOfFields() < 1)
                 {
-                    throw CException (-1, L"Unable to create import table.");
+                    throw CException(-1, L"Parsing error: no fields.");
                 }
 
-                bRet = bImport (ioInStream, sTable, iColumns, iCharsRead, Progress);
+                int iColumns = sHeader.uiNFields();
+
+//                bool bRet = bCreateImportTable (sTable, sDescriptor, iColumns);
+//                if (!bRet)
+//                {
+//                    throw CException (-1, L"Unable to create import table.");
+//                }
+
+                bool bRet = bImport (ioInStream, sTable, iColumns, iCharsRead, bAutoincrement, pProgress);
                 if (!bRet)
                 {
                     throw CException (-1, L"Table import failed.");
@@ -968,9 +985,10 @@ namespace Hlib
 
             }   //  while (!feof (ioInstream))
     
-            Progress (100);
             fclose (ioInStream);
         
+            pProgress(100);
+
             return true;
         
         }   //  ImportTables (...)
@@ -978,20 +996,14 @@ namespace Hlib
         //
         //  Helpers
         //
-        bool bCreateImportTable (const CEString& sTable, const CEString& sDescriptor, int& iColumns)
+        bool bCreateImportTable (const CEString& sTable, const CEString& sDescriptor, int iColumns)
         {
-            CEString sSeparators (SZ_SEPARATOR);
+            CEString sSeparators(SZ_SEPARATOR);
             sSeparators += L", \n";
-            CEString sHeader (sDescriptor);
-            sHeader.SetBreakChars (SZ_SEPARATOR);
-            if (sHeader.uiGetNumOfFields() < 1)
-            {
-                throw CException (-1, L"Parsing error: no fields.");
-            }
+            CEString sHeader(sDescriptor);
+            sHeader.SetBreakChars(SZ_SEPARATOR);
 
-            iColumns = sHeader.uiNFields();
-
-            if (bTableExists (sTable))
+            if (bTableExists(sTable))
             {
                 CEString sDropStmt (L"DROP TABLE ");
                 sDropStmt += sTable;
@@ -1052,7 +1064,8 @@ namespace Hlib
                       const CEString& sTable, 
                       int iColumns,
                       int iCharsRead,
-                      CProgressCallback& Progress)
+                      bool bAutoincrement,
+                      PROGRESS_CALLBACK_CLR pProgress)
         {
             long lFileLength = _filelength (_fileno (ioInstream))/sizeof (wchar_t);
             int iPercentDone = 0;
@@ -1060,15 +1073,33 @@ namespace Hlib
             CEString sStmt = L"INSERT INTO ";
             sStmt += sTable;
             sStmt += L" VALUES (";
-            for (int iCol = 0; iCol < iColumns; ++iCol)
+
+            if (bAutoincrement)
             {
-                if (iCol > 0)
+//                sStmt += L"(SELECT last_insert_rowid())";
+                sStmt += L"NULL";
+                for (int iCol = 1; iCol < iColumns; ++iCol)
                 {
-                    sStmt += L",";
+                    if (iCol > 0)
+                    {
+                        sStmt += L",";
+                    }
+                    sStmt += L"?";
                 }
-                sStmt += L"?";
+                sStmt += L")";
             }
-            sStmt += L")";
+            else
+            {
+                for (int iCol = 0; iCol < iColumns; ++iCol)
+                {
+                    if (iCol > 0)
+                    {
+                        sStmt += L",";
+                    }
+                    sStmt += L"?";
+                }
+                sStmt += L")";
+            }
 
             sqlite3_stmt * pStmt = NULL;
 
@@ -1117,12 +1148,15 @@ namespace Hlib
                     throw CException (-1, L"Number of fields does not match number of columns.");
                 }
 
-                __int64 llId = _wtoi64 (sLine.sGetField (0));
-                Bind (1, llId, pStmt);
+                if (!bAutoincrement)
+                {
+                    __int64 llId = _wtoi64(sLine.sGetField(0));
+                    Bind(1, llId, pStmt);
+                }
 
                 for (int iCol = 2; iCol <= iColumns; ++iCol)
                 {
-                    Bind (iCol, sLine.sGetField (iCol-1), pStmt);
+                    Bind (iCol-1, sLine.sGetField (iCol-1), pStmt);
                 }
             
                 InsertRow (pStmt);
@@ -1132,7 +1166,7 @@ namespace Hlib
                 if (iPd > iPercentDone)
                 {
                     iPercentDone = min (iPd, 100);
-                    Progress (iPercentDone);
+                    pProgress (iPercentDone);
                 }
 
             }   //  for (; !feof (ioInstream); ++iEntriesRead)
