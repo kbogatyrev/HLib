@@ -868,7 +868,7 @@ namespace Hlib
         //
         // Note: existing tables will be overwritten
         //
-        bool bImportTables(const CEString& sPath, bool bAutoincrement, PROGRESS_CALLBACK_CLR pProgress)
+        bool bImportTables(const CEString& sPath, bool bMerge, PROGRESS_CALLBACK_CLR pProgress)
         {
             if (NULL == m_spDb_)
             {
@@ -971,13 +971,16 @@ namespace Hlib
 
                 int iColumns = sHeader.uiNFields();
 
-//                bool bRet = bCreateImportTable (sTable, sDescriptor, iColumns);
-//                if (!bRet)
-//                {
-//                    throw CException (-1, L"Unable to create import table.");
-//                }
+                if (!bMerge)
+                {
+                    bool b_ = bCreateImportTable(sTable, sDescriptor, iColumns);
+                    if (!b_)
+                    {
+                        throw CException(-1, L"Unable to create import table.");
+                    }
+                }
 
-                bool bRet = bImport (ioInStream, sTable, iColumns, iCharsRead, bAutoincrement, pProgress);
+                bool bRet = bImport (ioInStream, sTable, iColumns, iCharsRead, bMerge, pProgress);
                 if (!bRet)
                 {
                     throw CException (-1, L"Table import failed.");
