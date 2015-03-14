@@ -55,13 +55,14 @@ struct StLexemeHasher
 
     }   // unsigned int sHash()
 
-    bool bSaveToDb (CSqlite * pDbHandle, __int64 llDescriptorId)
+    bool bSaveToDb (CSqlite * pDbHandle, __int64 llDescriptorId, __int64 llInflectionId)
     {
         try
         {
-            pDbHandle->PrepareForInsert (L"lexeme_hash_to_descriptor", 2);
+            pDbHandle->PrepareForInsert (L"lexeme_hash_to_descriptor", 3);
             pDbHandle->Bind (1, sHash());
             pDbHandle->Bind (2, llDescriptorId);
+            pDbHandle->Bind (3, llInflectionId);
             pDbHandle->InsertRow();
             pDbHandle->Finalize();
         }

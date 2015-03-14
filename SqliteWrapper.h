@@ -66,13 +66,13 @@ namespace Hlib
                     if (SQLITE_BUSY == iRet)
                     {
                         ERROR_LOG (L"Warning: DB is still in use; trying to finalize open statements. \n");
-                        for (int iCycle = 0; iCycle < 1000 && iRet == SQLITE_BUSY; ++iCycle)
+                        for (int iCycle = 0; iCycle < 10000 && iRet == SQLITE_BUSY; ++iCycle)
                         {
                             sqlite3_stmt * stmt = sqlite3_next_stmt (m_spDb_, NULL);
                             iRet = sqlite3_finalize (stmt);
                             iRet = sqlite3_close (m_spDb_);
                         }
-                        iRet = sqlite3_close (m_spDb_);
+//                        iRet = sqlite3_close (m_spDb_);
                         if (SQLITE_OK != iRet)
                         {
                             throw CException (iRet, L"Unable to close database");
