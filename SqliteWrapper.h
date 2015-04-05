@@ -1157,9 +1157,9 @@ namespace Hlib
                     Bind(1, llId, pStmt);
                 }
 
-                for (int iCol = 2; iCol <= iColumns; ++iCol)
+                for (int iCol = 1; iCol < iColumns; ++iCol)
                 {
-                    Bind (iCol-1, sLine.sGetField (iCol-1), pStmt);
+                    Bind (iCol, sLine.sGetField (iCol), pStmt);
                 }
             
                 InsertRow (pStmt);
