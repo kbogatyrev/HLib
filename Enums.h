@@ -310,6 +310,49 @@ namespace Hlib
         eo_p = (ET_Person)(eo_p + 1);
     }
 
+    static ET_PartOfSpeech eSubparadigmToPos(ET_Subparadigm eSubparadigm)
+    {
+        ET_PartOfSpeech ePos = POS_UNDEFINED;
+
+        switch (eSubparadigm)
+        {
+        case SUBPARADIGM_NOUN:
+            ePos = POS_NOUN;
+            break;
+
+        case SUBPARADIGM_LONG_ADJ:
+        case SUBPARADIGM_SHORT_ADJ:
+        case SUBPARADIGM_COMPARATIVE:
+            ePos = POS_ADJ;
+            break;
+                
+        case SUBPARADIGM_PRONOUN_ADJ:
+            ePos = POS_PRONOUN;
+            break;
+                
+        case  SUBPARADIGM_INFINITIVE:
+        case  SUBPARADIGM_PRESENT_TENSE:
+        case  SUBPARADIGM_PAST_TENSE:
+        case  SUBPARADIGM_IMPERATIVE:
+        case  SUBPARADIGM_ADVERBIAL_PRESENT:
+        case  SUBPARADIGM_ADVERBIAL_PAST:
+        case  SUBPARADIGM_PART_PRES_ACT:
+        case  SUBPARADIGM_PART_PRES_PASS_LONG:
+        case  SUBPARADIGM_PART_PRES_PASS_SHORT:
+        case  SUBPARADIGM_PART_PAST_ACT:
+        case  SUBPARADIGM_PART_PAST_PASS_LONG:
+        case  SUBPARADIGM_PART_PAST_PASS_SHORT:
+            ePos = POS_VERB;
+            break;
+
+        default:
+            ePos = POS_UNDEFINED;
+        
+        }   // switch
+
+        return ePos;
+    
+    }       //  eSubparadigmToPos
 
 }   // namespace Hlib
 
