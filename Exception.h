@@ -28,7 +28,7 @@ public:
 
     CException (int iErrorCode, const wchar_t * szDescription) : m_iErrorCode (iErrorCode)
     {
-        int iLength = min (wcslen (szDescription), cuiMaxTextLength);
+        auto iLength = min (wcslen (szDescription), cuiMaxTextLength);
         errno_t error = wmemmove_s (m_arrDescription, cuiMaxTextLength, szDescription, iLength);                
         if (error)
         {

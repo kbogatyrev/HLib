@@ -60,7 +60,7 @@ public:
     {
 #ifdef _DEBUG
         wstring sTxt = wstring(pwchrMyMsg) + wstring(L"\r\n");
-        int iNewLength = sTxt.length();
+        auto iNewLength = sTxt.length();
         wchar_t * pTxt = new wchar_t[iNewLength + 1];
         errno_t err = wcscpy_s(pTxt, iNewLength + 1, sTxt.c_str());
         if (!err)
@@ -155,7 +155,7 @@ public:
                 wstring sLine (*it_);
                 sLine += L"\r\n";
                 DWORD dwBytesWritten = 0;
-                BOOL uiRet = WriteFile (hf, sLine.c_str(), sLine.length()*sizeof(wchar_t), &dwBytesWritten, NULL);
+                BOOL uiRet = WriteFile (hf, sLine.c_str(), (DWORD)sLine.length()*sizeof(wchar_t), &dwBytesWritten, NULL);
             }
         }
 #endif    
@@ -284,11 +284,11 @@ private:
 
         BOOL python = ConnectNamedPipe(hPipe, NULL);
         DWORD dwWritten = 0;
-        UINT uiRet = WriteFile (hPipe,            // pipe handle 
-                                sMsg.c_str(),   // message 
-                                sMsg.length()  * sizeof (wchar_t),  // message length 
-                                &dwWritten,       // bytes written 
-                                NULL);             // not overlapped 
+        UINT uiRet = WriteFile (hPipe,           // pipe handle 
+                                sMsg.c_str(),    // message 
+                                (DWORD)sMsg.length()  * sizeof (wchar_t),  // message length 
+                                &dwWritten,      // bytes written 
+                                NULL);           // not overlapped 
         CloseHandle (hPipe); 
  
         return uiRet ? true : false;
