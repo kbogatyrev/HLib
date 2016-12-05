@@ -10,23 +10,23 @@ namespace Hlib
 
 struct StLexemeHasher
 {
-    map<int, ET_StressType> mapStress;
-    CEString sSourceForm;
-    CEString sMainSymbol;
-    int iInflectionType;
-    int iAccentType1;
-    int iAccentType2;
-    CEString sComment;
+    map<int, ET_StressType> m_mapStress;
+    CEString m_sSourceForm;
+    CEString m_sMainSymbol;
+    int m_iInflectionType;
+    int m_iAccentType1;
+    int m_iAccentType2;
+    CEString m_sComment;
 
-    StLexemeHasher() : iInflectionType (-1), iAccentType1 (-1), iAccentType2 (-1)
+    StLexemeHasher() : m_iInflectionType(-1), m_iAccentType1(-1), m_iAccentType2(-1)
     {}
 
     CEString sHash()
     {
-        CEString sText (sSourceForm);
+        CEString sText (m_sSourceForm);
 
-        map<int, ET_StressType>::iterator itStress = mapStress.begin();
-        for (; itStress != mapStress.end(); ++ itStress)
+        map<int, ET_StressType>::iterator itStress = m_mapStress.begin();
+        for (; itStress != m_mapStress.end(); ++ itStress)
         {
             unsigned char * pchrStress = (unsigned char *)&(*itStress).first;
             sText += 32 + pchrStress[0];
@@ -34,26 +34,23 @@ struct StLexemeHasher
             sText += 32 + pchrStress[0];
         }
 
-        sText += sMainSymbol;
+        sText += m_sMainSymbol;
 
-        unsigned char * pchrAt = (unsigned char *)&iInflectionType;
+        unsigned char * pchrAt = (unsigned char *)&m_iInflectionType;
         sText += 32 + pchrAt[0];
 
-        pchrAt = (unsigned char *)&iAccentType1;
+        pchrAt = (unsigned char *)&m_iAccentType1;
         sText += 32 + pchrAt[0];
 
-        pchrAt = (unsigned char *)&iAccentType2;
+        pchrAt = (unsigned char *)&m_iAccentType2;
         sText += 32 + pchrAt[0];
 
-        sText += sComment;
+        sText += m_sComment;
 
-//        unsigned int ui_hash = GenericHash::ui_hash ((unsigned char *)sText.c_str(), 
-//                                                     sText.length()*sizeof (wchar_t), 
-//                                                     0);
         CMD5 md5;
         return md5.sHash (sText);
 
-    }   // unsigned int sHash()
+    }   // sHash()
 
     bool bSaveToDb (CSqlite * pDbHandle, __int64 llDescriptorId, __int64 llInflectionId)
     {
