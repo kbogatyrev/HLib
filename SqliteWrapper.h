@@ -133,7 +133,7 @@ namespace Hlib
                 throw CException (iRet, L"sqlite3_exec failed for transaction end");
             }
     
-        }   //  CommitTransaction (...)
+        }
 
         void RollbackTransaction()
         {
@@ -1114,7 +1114,8 @@ namespace Hlib
 
             TCHAR szLineBuf[10000];
             CEString sLine;
-            sLine.SetBreakChars (sSeparators);
+            sLine.ResetSeparators();
+            sLine.SetBreakChars(sSeparators);
             for (; !feof (ioInstream); ++iEntriesRead)
             {
                 int iRet = sqlite3_prepare16_v2 (m_spDb_, sStmt, -1, &pStmt, NULL);
