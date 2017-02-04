@@ -963,7 +963,8 @@ namespace Hlib
                 CEString sSeparators(SZ_SEPARATOR);
                 sSeparators += L", \n";
                 CEString sHeader(sDescriptor);
-                sHeader.SetBreakChars(SZ_SEPARATOR);
+                sHeader.ResetSeparators();
+                sHeader.SetBreakChars(sSeparators);
                 if (sHeader.uiGetNumOfFields() < 1)
                 {
                     throw CException(-1, L"Parsing error: no fields.");
@@ -1004,7 +1005,8 @@ namespace Hlib
             CEString sSeparators(SZ_SEPARATOR);
             sSeparators += L", \n";
             CEString sHeader(sDescriptor);
-            sHeader.SetBreakChars(SZ_SEPARATOR);
+            sHeader.ResetSeparators();
+            sHeader.SetBreakChars(sSeparators);
 
             if (bTableExists(sTable))
             {
