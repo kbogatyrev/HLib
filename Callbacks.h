@@ -4,6 +4,8 @@
 #ifndef CALLBACKS_H_INCLUDED
 #define CALLBACKS_H_INCLUDED
 
+#include <iostream>
+
 using namespace std;
 
 namespace Hlib
