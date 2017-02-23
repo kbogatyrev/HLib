@@ -1183,6 +1183,13 @@ namespace Hlib
 
         }   // Import (...)
 
+        void ClearTable(const CEString& sTableName)
+        {
+            CEString sQuery(L"DELETE FROM ");
+            sQuery += sTableName;
+            Exec(sQuery);
+        }
+
         int iLastID (const CEString& sTableName)     // returns the ID of the last entry in the table
         {
             int iLastId = 0;
@@ -1203,7 +1210,7 @@ namespace Hlib
         
             return iLastId;
     
-        }   // i_LastID (...)
+        }   // iLastID (...)
 
     };  //  class CSqlite
 
