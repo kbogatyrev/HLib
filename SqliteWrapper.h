@@ -75,7 +75,7 @@ namespace Hlib
 //                        iRet = sqlite3_close (m_spDb_);
                         if (SQLITE_OK != iRet)
                         {
-                            throw CException (iRet, L"Unable to close database");
+                            ERROR_LOG(L"Unable to close database.\n");
                         }
                     }
                     m_spDb_ = NULL;
