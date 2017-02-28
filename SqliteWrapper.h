@@ -155,11 +155,11 @@ namespace Hlib
             PrepareForSelect (sStmt, m_pStmt);
         }
 
-        unsigned int uiPrepareForSelect(const CEString& sStmt, bool bIgnoreOnConflict = false)
+        uint64_t uiPrepareForSelect(const CEString& sStmt, bool bIgnoreOnConflict = false)
         {
             sqlite3_stmt * pStmt = NULL;
             PrepareForSelect (sStmt, pStmt);
-            return (unsigned int)pStmt;
+            return (uint64_t)pStmt;
         }
 
         void PrepareForSelect(const CEString& sStmt, sqlite3_stmt *& pStmt)
@@ -176,7 +176,7 @@ namespace Hlib
             uiPrepareForInsert (sTable, iColumns, m_pStmt, bIgnoreOnConflict);
         }
 
-        unsigned int uiPrepareForInsert (const CEString& sTable, int iColumns, sqlite3_stmt *& pStmt, bool bIgnoreOnConflict = false)
+        uint64_t uiPrepareForInsert (const CEString& sTable, int iColumns, sqlite3_stmt *& pStmt, bool bIgnoreOnConflict = false)
         {
             CEString sStmt(L"INSERT ");
             if (bIgnoreOnConflict)
@@ -203,7 +203,7 @@ namespace Hlib
                 throw CException (iRet, L"sqlite3_prepare16_v2 failed");
             }
 
-            return (unsigned int)pStmt;
+            return (uint64_t)pStmt;
         }
 
         void PrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns, __int64 llPrimaryKey)
@@ -216,7 +216,7 @@ namespace Hlib
             uiPrepareForUpdate (sTable, vecColumns, -1, m_pStmt);
         }
 
-        unsigned int uiPrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns, __int64 llPrimaryKey, sqlite3_stmt *& pStmt)
+        uint64_t uiPrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns, __int64 llPrimaryKey, sqlite3_stmt *& pStmt)
         {
             CEString sStmt = L"UPDATE ";
             sStmt += sTable;
@@ -244,7 +244,7 @@ namespace Hlib
                 throw CException (iRet, L"sqlite3_prepare16_v2 failed");
             }
 
-            return (unsigned int)pStmt;
+            return (uint64_t)pStmt;
         }
 
         void Bind (int iColumn, bool bValue)
@@ -252,7 +252,7 @@ namespace Hlib
             Bind (iColumn, bValue, m_pStmt);
         }
 
-        void Bind (int iColumn, bool bValue, unsigned int uiHandle)
+        void Bind (int iColumn, bool bValue, uint64_t uiHandle)
         {
             Bind (iColumn, bValue, (sqlite3_stmt *)uiHandle);
         }
@@ -271,7 +271,7 @@ namespace Hlib
             Bind (iColumn, iValue, m_pStmt);
         }
 
-        void Bind (int iColumn, int iValue, unsigned int uiHandle)
+        void Bind (int iColumn, int iValue, uint64_t uiHandle)
         {
             Bind (iColumn, iValue, (sqlite3_stmt *)uiHandle);
         }
@@ -285,17 +285,17 @@ namespace Hlib
             }
         }
 
-        void Bind (int iColumn, unsigned int uiValue)
+        void Bind (int iColumn, uint64_t uiValue)
         {
             Bind (iColumn, uiValue, m_pStmt);
         }
 
-        void Bind (int iColumn, unsigned int uiValue, unsigned int uiHandle)
+        void Bind (int iColumn, uint64_t uiValue, uint64_t uiHandle)
         {
             Bind (iColumn, uiValue, (sqlite3_stmt *)uiHandle);
         }
 
-        void Bind (int iColumn, unsigned int uiValue, sqlite3_stmt * pStmt)
+        void Bind (int iColumn, uint64_t uiValue, sqlite3_stmt * pStmt)
         {
             int iRet = sqlite3_bind_int64 (pStmt, iColumn, (__int64)uiValue);
             if (SQLITE_OK != iRet)
@@ -309,7 +309,7 @@ namespace Hlib
             Bind (iColumn, llValue, m_pStmt);
         }
 
-        void Bind (int iColumn, __int64 llValue, unsigned int uiHandle)
+        void Bind (int iColumn, __int64 llValue, uint64_t uiHandle)
         {
             Bind (iColumn, llValue, (sqlite3_stmt *)uiHandle);
         }
@@ -328,7 +328,7 @@ namespace Hlib
             Bind (iColumn, sValue, m_pStmt);
         }
 
-        void Bind (int iColumn, const CEString& sValue, unsigned int uiHandle)
+        void Bind (int iColumn, const CEString& sValue, uint64_t uiHandle)
         {
             Bind (iColumn, sValue, (sqlite3_stmt *)uiHandle);
         }
@@ -347,7 +347,7 @@ namespace Hlib
             InsertRow (m_pStmt);
         }
 
-        void InsertRow (unsigned int uiHandle)
+        void InsertRow (uint64_t uiHandle)
         {
             InsertRow ((sqlite3_stmt *)uiHandle);
         }
@@ -383,7 +383,7 @@ namespace Hlib
             UpdateRow (m_pStmt);
         }
 
-        void UpdateRow (unsigned int uiHandle)
+        void UpdateRow (uint64_t uiHandle)
         {
             UpdateRow ((sqlite3_stmt *)uiHandle);
         }
@@ -419,7 +419,7 @@ namespace Hlib
             return bGetRow (m_pStmt);
         }
 
-        bool bGetRow (unsigned int uiHandle)
+        bool bGetRow (uint64_t uiHandle)
         {
             return bGetRow ((sqlite3_stmt *)uiHandle);
         }
@@ -457,7 +457,7 @@ namespace Hlib
             GetData (iColumn, bValue, m_pStmt);
         }
 
-        void GetData (int iColumn, bool& bValue, unsigned int uiHandle)
+        void GetData (int iColumn, bool& bValue, uint64_t uiHandle)
         {
             GetData (iColumn, bValue, (sqlite3_stmt *)uiHandle);
         }
@@ -473,7 +473,7 @@ namespace Hlib
             GetData (iColumn, iValue, m_pStmt);
         }
 
-        void GetData (int iColumn, int& iValue, unsigned int uiHandle)
+        void GetData (int iColumn, int& iValue, uint64_t uiHandle)
         {
             GetData (iColumn, iValue, (sqlite3_stmt *)uiHandle);
         }
@@ -488,22 +488,22 @@ namespace Hlib
             GetData (iColumn, ll_value, m_pStmt);
         }
 
-        void GetData (int iColumn, __int64& ll_value, unsigned int uiHandle)
+        void GetData (int iColumn, __int64& llValue, uint64_t uiHandle)
         {
-            GetData (iColumn, ll_value, (sqlite3_stmt *)uiHandle);
+            GetData (iColumn, llValue, (sqlite3_stmt *)uiHandle);
         }
 
-        void GetData (int iColumn, __int64& ll_value, sqlite3_stmt * pStmt)
+        void GetData (int iColumn, __int64& llValue, sqlite3_stmt * pStmt)
         {
-            ll_value = (unsigned __int64)sqlite3_column_int64 (pStmt, iColumn);
+            llValue = (unsigned __int64)sqlite3_column_int64 (pStmt, iColumn);
         }
 
-        void GetData(int iColumn, unsigned int& uiValue)
+        void GetData(int iColumn, uint64_t& uiValue)
         {
             GetData(iColumn, uiValue, m_pStmt);
         }
 
-        void GetData(int iColumn, unsigned int& uiValue, unsigned int uiHandle)
+        void GetData(int iColumn, unsigned int& uiValue, uint64_t uiHandle)
         {
             GetData(iColumn, uiValue, (sqlite3_stmt *)uiHandle);
         }
@@ -513,12 +513,12 @@ namespace Hlib
             uiValue = sqlite3_column_int(pStmt, iColumn);
         }
 
-        void GetData(int iColumn, unsigned __int64& ull_value)
-        {
-            GetData(iColumn, ull_value, m_pStmt);
-        }
+//        void GetData(int iColumn, unsigned __int64& ull_value)
+//        {
+//            GetData(iColumn, ull_value, m_pStmt);
+//        }
 
-        void GetData(int iColumn, unsigned __int64& ull_value, unsigned int uiHandle)
+        void GetData(int iColumn, unsigned __int64& ull_value, uint64_t uiHandle)
         {
             GetData(iColumn, ull_value, (sqlite3_stmt *)uiHandle);
         }
@@ -533,7 +533,7 @@ namespace Hlib
             GetData (iColumn, sValue, m_pStmt);
         }
 
-        void GetData (int iColumn, CEString& sValue, unsigned int uiHandle)
+        void GetData (int iColumn, CEString& sValue, uint64_t uiHandle)
         {
             GetData (iColumn, sValue, (sqlite3_stmt *)uiHandle);
         }
@@ -552,7 +552,7 @@ namespace Hlib
             Finalize (m_pStmt);
         }
 
-        void Finalize (unsigned int uiHandle)
+        void Finalize (uint64_t uiHandle)
         {
             Finalize ((sqlite3_stmt *)uiHandle);
         }
@@ -607,7 +607,7 @@ namespace Hlib
             return llGetLastKey (m_pStmt);
         }
 
-        __int64 llGetLastKey (unsigned int uiHandle)
+        __int64 llGetLastKey (uint64_t uiHandle)
         {
             return llGetLastKey ((sqlite3_stmt *)uiHandle);
         }
