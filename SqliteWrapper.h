@@ -11,7 +11,7 @@ static const wchar_t * SZ_SEPARATOR = L"|";
 namespace Hlib
 {
     // Progress delegate invoked from C#/CLR
-    typedef void(__stdcall *PROGRESS_CALLBACK_CLR) (int iPercentDone);
+    typedef void(__stdcall *PROGRESS_CALLBACK_CLR) (int iPercentDone, bool bOperationComplete);
 
     class CSqlite
     {
@@ -842,7 +842,7 @@ namespace Hlib
                     if (iPd > iPercentDone)
                     {
                         iPercentDone = min (iPd, 100);
-                        pProgress (iPercentDone);
+                        pProgress (iPercentDone, false);
                     }
 
                     ++llRow;
@@ -859,7 +859,7 @@ namespace Hlib
 
             fclose (ioOutStream);
 
-            pProgress(100);
+            pProgress(100, false);
 
             return true;
 
@@ -991,7 +991,7 @@ namespace Hlib
     
             fclose (ioInStream);
         
-            pProgress(100);
+            pProgress(100, false);
 
             return true;
         
@@ -1172,7 +1172,7 @@ namespace Hlib
                 if (iPd > iPercentDone)
                 {
                     iPercentDone = min (iPd, 100);
-                    pProgress (iPercentDone);
+                    pProgress (iPercentDone, false);
                 }
 
             }   //  for (; !feof (ioInstream); ++iEntriesRead)
