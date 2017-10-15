@@ -1,6 +1,7 @@
 #ifndef H_SQLITE_WRAPPER
 #define H_SQLITE_WRAPPER
 
+#include <io.h>
 #include "EString.h"
 #include "Exception.h"
 #include "Callbacks.h"
