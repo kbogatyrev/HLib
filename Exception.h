@@ -1,17 +1,17 @@
 #ifndef C_EXCEPTION_H_INCLUDED
 #define C_EXCEPTION_H_INCLUDED
 
-//#include "stdafx.h"
-//#include <ASSERT.h>
+#include <algorithm>
 #include "Enums.h"
 #include "Logging.h"
 
 namespace Hlib
 {
 
+static const unsigned int cuiMaxTextLength = 5000;
+    
 class CException
 {
-    static const unsigned int cuiMaxTextLength = 5000;
 
 protected:
     int m_iErrorCode;
@@ -28,14 +28,18 @@ public:
 
     CException (int iErrorCode, const wchar_t * szDescription) : m_iErrorCode (iErrorCode)
     {
-        auto iLength = min (wcslen (szDescription), cuiMaxTextLength);
-        errno_t error = wmemmove_s (m_arrDescription, cuiMaxTextLength, szDescription, iLength);                
+        auto iLength = min ((unsigned int)wcslen (szDescription), cuiMaxTextLength);
+#ifdef WIN32
+        int error = wmemmove_s (m_arrDescription, cuiMaxTextLength, szDescription, iLength);                
         if (error)
         {
             ASSERT(0);
             wchar_t * szMsg = L"wmemmove_s failed.";
             ERROR_LOG (szMsg);
         }
+#else
+        memmove(m_arrDescription, szDescription, iLength);
+#endif
         m_arrDescription[iLength] = L'\0';
     }
 

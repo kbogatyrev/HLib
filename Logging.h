@@ -5,19 +5,25 @@
 #define LOGGING_H_INCLUDED
 
 #include <sstream>
-#include <strstream>
 #include <ios>
+#include <time.h>
 
+#ifdef WIN32
 #include <windows.h>
+#endif
+
 #include <vector>
 #include <string>
 #include <ctime>
 
+#ifdef WIN32
 #include <crtdbg.h>
 #include <tchar.h>
-
 #include <Windows.h>
 #include <Commdlg.h>
+#else
+#include <locale>
+#endif
 
 using namespace std;
 
@@ -33,9 +39,11 @@ class CLogger
 public:
     CLogger()
     {
+#ifdef WIN32
         _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
         _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
         _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
+#endif
     }
 
     virtual ~CLogger() {}
@@ -56,6 +64,11 @@ private:
     vector<wstring> m_vecLog;
 
 public:
+    void DebugTrace(int uiType, wstring wFunction, int uiLine, const wchar_t * szMyMsg)
+    {
+        DebugTrace(uiType, L"", wFunction.c_str(), uiLine, szMyMsg);
+    }
+
     void DebugTrace(unsigned int uiType, const wchar_t * pwchrPath, const wchar_t * pwchrFunction, unsigned int uiLine, const wchar_t * pwchrMyMsg)
     {
 #ifdef _DEBUG
@@ -65,17 +78,21 @@ public:
         errno_t err = wcscpy_s(pTxt, iNewLength + 1, sTxt.c_str());
         if (!err)
         {
+#ifdef WIN32
             _CrtDbgReportW(uiType, pwchrPath, uiLine, NULL, L"%s", pTxt);
+#endif
         }
         else
         {
+#ifdef WIN32
             _CrtDbgReportW(uiType, pwchrPath, uiLine, NULL, L"%s", L"DebugTrace(): msg formatting failed");
+#endif
         }
 #endif
 
         wstringstream ioToString;
         ioToString << uiLine;
-        wstring sLocation = wstring(pwchrPath) + wstring(_T("\t")) + ioToString.str() + wstring(_T("\t")) + wstring(pwchrFunction);
+        wstring sLocation = wstring(pwchrPath) + wstring(L"\t") + ioToString.str() + wstring(L"\t") + wstring(pwchrFunction);
         CLogger * pErrorHandler = CLogger::pGetInstance();
         pErrorHandler->HandleError(pwchrMyMsg, sLocation.c_str());
     }
@@ -106,7 +123,9 @@ public:
     {
         if (m_vecLog.empty())
         {
+#ifdef WIN32
             ::MessageBox (NULL, L"No errors", L"ECSting Test", MB_ICONINFORMATION);
+#endif
             return;
         }
 
@@ -204,7 +223,11 @@ private:
         time_t timeCurrent;
         time (&timeCurrent);
         tm stLocalTime;
-        errno_t iRet = localtime_s (&stLocalTime,  &timeCurrent);
+#ifdef WIN32
+        localtime_s (&stLocalTime,  &timeCurrent);
+#else
+        stLocalTime = *localtime(&timeCurrent);
+#endif
         wstring sTimeStamp = sToString (stLocalTime.tm_year + 1900);
         sTimeStamp += L"-";
         sTimeStamp += sToString (stLocalTime.tm_mon + 1);
@@ -235,68 +258,73 @@ private:
     }    //  str_Format_ (...)
     public:
 
-    static bool bWriteLog (const wstring& sMsg)
-    {
-        const wchar_t * pchrName = L"\\\\.\\pipe\\HMessageLog"; 
-  
-        HANDLE hPipe = NULL;
-        while (1) 
-        { 
-            hPipe = CreateNamedPipe( 
-            pchrName,
-            PIPE_ACCESS_OUTBOUND,
-            PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-            1,
-            512,
-            512,
-            0,
-            NULL);
- 
-            if (INVALID_HANDLE_VALUE != hPipe) 
+        static bool bWriteLog(const wstring& sMsg)
+        {
+#ifdef WIN32
+            const wchar_t * pchrName = L"\\\\.\\pipe\\HMessageLog";
+
+            HANDLE hPipe = NULL;
+            while (1)
             {
-                break;
+                hPipe = CreateNamedPipe(
+                    pchrName,
+                    PIPE_ACCESS_OUTBOUND,
+                    PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+                    1,
+                    512,
+                    512,
+                    0,
+                    NULL);
+
+                if (INVALID_HANDLE_VALUE != hPipe)
+                {
+                    break;
+                }
+
+                if (GetLastError() != ERROR_PIPE_BUSY)
+                {
+                    return false;
+                }
+
+                if (!WaitNamedPipe(pchrName, 500))
+                {
+                    return false;
+                }
             }
- 
-            if (GetLastError() != ERROR_PIPE_BUSY) 
-            {
-                return false;
-            }
- 
-            if (!WaitNamedPipe(pchrName, 500))
-            { 
-                return false;
-            } 
+
+            /*
+               dwMode = PIPE_READMODE_MESSAGE;
+               fSuccess = SetNamedPipeHandleState(
+                  hPipe,    // pipe handle
+                  &dwMode,  // new pipe mode
+                  NULL,     // don't set maximum bytes
+                  NULL);    // don't set maximum time
+               if (!fSuccess)
+               {
+                  printf("SetNamedPipeHandleState failed");
+                  return 0;
+               }
+            */
+
+            BOOL python = ConnectNamedPipe(hPipe, NULL);
+            DWORD dwWritten = 0;
+            UINT uiRet = WriteFile(hPipe,           // pipe handle 
+                sMsg.c_str(),    // message 
+                (DWORD)sMsg.length() * sizeof(wchar_t),  // message length 
+                &dwWritten,      // bytes written 
+                NULL);           // not overlapped 
+            CloseHandle(hPipe);
+
+            return uiRet ? true : false;
         }
-
-/*
-   dwMode = PIPE_READMODE_MESSAGE; 
-   fSuccess = SetNamedPipeHandleState( 
-      hPipe,    // pipe handle 
-      &dwMode,  // new pipe mode 
-      NULL,     // don't set maximum bytes 
-      NULL);    // don't set maximum time 
-   if (!fSuccess) 
-   {
-      printf("SetNamedPipeHandleState failed"); 
-      return 0;
-   }
-*/
-
-        BOOL python = ConnectNamedPipe(hPipe, NULL);
-        DWORD dwWritten = 0;
-        UINT uiRet = WriteFile (hPipe,           // pipe handle 
-                                sMsg.c_str(),    // message 
-                                (DWORD)sMsg.length()  * sizeof (wchar_t),  // message length 
-                                &dwWritten,      // bytes written 
-                                NULL);           // not overlapped 
-        CloseHandle (hPipe); 
- 
-        return uiRet ? true : false;
-
+#else
+            return true;
+#endif
     }   // bWriteLog()
 
 };
 
+#ifdef WIN32
 #define MESSAGE_LOG(sMsg__) \
     CLogger * pLogger__ = CLogger::pGetInstance(); \
     pLogger__->LogMessage(sMsg__.c_str());
@@ -310,6 +338,24 @@ private:
     CLogger * pErrorHandler__ = CLogger::pGetInstance(); \
         pErrorHandler__->DebugTrace(_CRT_ERROR, _T(__FILE__), _T(__FUNCTION__), __LINE__, L"Assertion failed."); \
     }
+#else
+#define MESSAGE_LOG(sMsg__) \
+    CLogger * pLogger__ = CLogger::pGetInstance(); \
+    pLogger__->LogMessage(sMsg__.c_str());
+
+#define ERROR_LOG(sMsg__) \
+    CLogger * pErrorHandler__ = CLogger::pGetInstance(); \
+    wstring wFunction = wstring_convert<codecvt_utf8<wchar_t>>().from_bytes(__PRETTY_FUNCTION__); \
+    pErrorHandler__->DebugTrace(0, wFunction, __LINE__, sMsg__);
+
+#define ASSERT(bBoolExpr__) if (!(bBoolExpr__)) \
+    {\
+        CLogger * pErrorHandler__ = CLogger::pGetInstance(); \
+        wstring wFunction = wstring_convert<codecvt_utf8<wchar_t>>().from_bytes(__PRETTY_FUNCTION__); \
+        pErrorHandler__->DebugTrace(0, wFunction, __LINE__, L"Assertion failed."); \
+    }
+
+#endif
 
 }   // namespace Hlib
 

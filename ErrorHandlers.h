@@ -13,8 +13,10 @@
 #include <string>
 #include <ctime>
 
+#ifdef WIN32
 #include <crtdbg.h>
 #include <tchar.h>
+#endif
 
 using namespace std;
 
@@ -27,9 +29,11 @@ class CError
 public:
     CError()
     {
+#ifdef WIN32
         _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
         _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
         _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
+#endif
     };
 
     virtual ~CError() {};
@@ -50,6 +54,11 @@ private:
     vector<wstring> m_vecLog;
 
 public:
+    void DebugTrace(int uiType, wstring wPath, wstring wFunction, int uiLine, const wchar_t * szMyMsg)
+    {
+        DebugTrace(uiType, wPath.c_str(), wFunction.c_str(), uiLine, szMyMsg);
+    }
+
     void DebugTrace(unsigned int uiType, const wchar_t * pwchrPath, const wchar_t * pwchrFunction, unsigned int uiLine, const wchar_t * pwchrMyMsg)
     {
 #ifdef _DEBUG
@@ -69,7 +78,7 @@ public:
 
         wstringstream ioToString;
         ioToString << uiLine;
-        wstring sLocation = wstring(pwchrPath) + wstring(_T("\t")) + ioToString.str() + wstring(_T("\t")) + wstring(pwchrFunction);
+        wstring sLocation = wstring(pwchrPath) + wstring(L("\t")) + ioToString.str() + wstring(L("\t")) + wstring(pwchrFunction);
         CError * pErrorHandler = CError::pGetInstance();
         pErrorHandler->HandleError(pwchrMyMsg, sLocation.c_str());
     }
@@ -88,16 +97,12 @@ public:
         else
         {
             m_vecLog.push_back (sFormattedMsg);
-        }
-        
-//        DebugTrace(sFormattedMsg);
-//        ATLTRACE2(sFormattedMsg.c_str());
-//        ATLTRACE2(L"\r\n");
-
+        }        
    }
 
     void Flush()
     {
+#ifdef WIN32
         if (m_vecLog.empty())
         {
             ::MessageBox (NULL, L"No errors", L"ECSting Test", MB_ICONINFORMATION);
@@ -151,7 +156,7 @@ public:
                 BOOL uiRet = WriteFile (hf, sLine.c_str(), sLine.length()*sizeof(wchar_t), &dwBytesWritten, NULL);
             }
         }
-    
+#endif    
     }   //  void Flush()
 
 public:
@@ -196,7 +201,11 @@ private:
         time_t timeCurrent;
         time (&timeCurrent);
         tm stLocalTime;
-        errno_t iRet = localtime_s (&stLocalTime,  &timeCurrent);
+#ifdef WIN32
+        localtime_s (&stLocalTime,  &timeCurrent);
+#else
+        stLocalTime = *localtime(&timeCurrent);
+#endif
         wstring sTimeStamp = sToString (stLocalTime.tm_year + 1900);
         sTimeStamp += L"-";
         sTimeStamp += sToString (stLocalTime.tm_mon + 1);
@@ -228,6 +237,7 @@ private:
 
     bool bWriteLog (const wstring& sMsg)
     {
+#ifdef WIN32
         LPTSTR szName = L"\\\\.\\pipe\\ZalConversionLog"; 
   
         HANDLE hPipe = NULL;
@@ -280,6 +290,9 @@ private:
         CloseHandle (hPipe); 
  
         return uiRet ? true : false;
+#else
+        return true;
+#endif
 
     }   // bWriteLog()
 
