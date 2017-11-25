@@ -3404,7 +3404,8 @@ CEString sToString(const char * pchrSource)    // only basic conversions
     int iRet = MultiByteToWideChar(CP_ACP, 0, pchrSource, -1, szNewBuf, iBytesNeeded);
     return CEString(szNewBuf);
 #else
-    wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    wstring_convert<codecvt_utf8<wchar_t>, wchar_t> converter;
+    wstring kiki = converter.from_bytes(pchrSource);
     return CEString (converter.from_bytes(pchrSource).c_str());
 #endif
 }
