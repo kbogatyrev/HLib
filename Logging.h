@@ -316,11 +316,11 @@ private:
             CloseHandle(hPipe);
 
             return uiRet ? true : false;
-        }
+
+        }    // bWriteLog()
 #else
             return true;
 #endif
-    }   // bWriteLog()
 
 };
 
