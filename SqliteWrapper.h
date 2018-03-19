@@ -201,7 +201,11 @@ namespace Hlib
             int iRet = sqlite3_prepare16_v2 (m_spDb_, sStmt, -1, &pStmt, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_prepare16_v2 failed");
+                CEString sErrTxt;
+                GetLastError(sErrTxt);
+                CEString sMsg(L"sqlite3_prepare16_v2 failed: ");
+                sMsg += sErrTxt;
+                throw CException (iRet, sMsg);
             }
 
             return (uint64_t)pStmt;
