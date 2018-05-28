@@ -18,17 +18,19 @@ namespace Hlib
     {
     private:
 
-    static sqlite3 * m_spDb_;
-    static int m_iRefcount_;
+//    static sqlite3 * m_spDb_;
+    sqlite3 * m_spDb_;
+//    static int m_iRefcount_;
+    int m_iRefcount_;
 
     public:
 
-        CSqlite()
+        CSqlite() : m_spDb_(NULL)
         {
             ++m_iRefcount_;
         }
 
-        CSqlite (const CEString& sDbPath)
+        CSqlite (const CEString& sDbPath) : m_spDb_(NULL)
         {
             if (0 >= m_iRefcount_)
             {
