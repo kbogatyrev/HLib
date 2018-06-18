@@ -21,19 +21,19 @@ namespace Hlib
 //    static sqlite3 * m_spDb_;
     sqlite3 * m_spDb_;
 //    static int m_iRefcount_;
-    int m_iRefcount_;
+//    int m_iRefcount_;
 
     public:
 
         CSqlite() : m_spDb_(NULL)
         {
-            ++m_iRefcount_;
+//            ++m_iRefcount_;
         }
 
         CSqlite (const CEString& sDbPath) : m_spDb_(NULL)
         {
-            if (0 >= m_iRefcount_)
-            {
+//            if (0 >= m_iRefcount_)
+//            {
                 if (m_spDb_)
                 {
                     ASSERT(0);
@@ -45,24 +45,24 @@ namespace Hlib
                     m_spDb_ = NULL;
                     throw CException (iRet, L"sqlite3_open16 failed.");
                 }
-            }
-            else
-            {
-                if (!m_spDb_)
-                {
-                    throw CException (-1, L"BD is not initialized but ref count is positive.");
-                }
-            }
+//            }
+//            else
+//            {
+//                if (!m_spDb_)
+//                {
+//                    throw CException (-1, L"BD is not initialized but ref count is positive.");
+//                }
+//            }
 
-            ++m_iRefcount_;
+//            ++m_iRefcount_;
         }
 
 
         ~CSqlite()
         {
-            --m_iRefcount_;
-            if (0 == m_iRefcount_)
-            {
+//            --m_iRefcount_;
+//            if (0 == m_iRefcount_)
+//            {
                 if (m_spDb_)
                 {
                     int iRet = sqlite3_close (m_spDb_);
@@ -83,7 +83,7 @@ namespace Hlib
                     }
                     m_spDb_ = NULL;
                 }
-            }
+//            }
         
     //        _CrtDumpMemoryLeaks();
 
