@@ -419,7 +419,7 @@ namespace Hlib
                 throw CException (iRet, L"sqlite3_reset failed");
             }
 
-        }   // InsertRow()
+        }   // UpdateRow()
 
         bool bGetRow()
         {
@@ -603,7 +603,9 @@ namespace Hlib
             int iRet = sqlite3_exec(m_spDb_, pchrUtf8Query, NULL, NULL, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException(iRet, L"sqlite3_finalize failed");
+                CEString sMsg(L"sqlite3_exec failed, error ");
+                sMsg += CEString::sToString(iRet);
+                throw CException(iRet, L"sqlite3_exec failed");
             }
 
             delete[] pchrUtf8Query;
