@@ -1160,7 +1160,12 @@ namespace Hlib
 
                 if (sLine.uiNFields() != iColumns)
                 {
-                    throw CException (-1, L"Number of fields does not match number of columns.");
+                    CEString sMsg(L"Number of fields does not match number of columns: ");
+                    sMsg += sLine;                    
+                    sMsg += L"\n";
+                    ERROR_LOG(sMsg);
+//                    throw CException (-1, L"Number of fields does not match number of columns.");
+                    continue;
                 }
 
                 if (!bAutoincrement)
