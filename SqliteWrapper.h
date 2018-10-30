@@ -252,7 +252,43 @@ namespace Hlib
             }
 
             return (uint64_t)pStmt;
+        
+        }       //  uiPrepareForUpdate()
+
+        void PrepareForInsertOrReplace(const CEString& sTable, int iColumns)
+        {
+            uiPrepareForInsertOrReplace(sTable, iColumns, m_pStmt);
         }
+
+        uint64_t uiPrepareForInsertOrReplace(const CEString& sTable, int iColumns, sqlite3_stmt *& pStmt)
+        {
+            CEString sStmt(L"INSERT ");
+            sStmt += L"OR REPLACE INTO ";
+            sStmt += sTable;
+            sStmt += L" VALUES (NULL, ";
+            for (int iCol = 0; iCol < iColumns; ++iCol)
+            {
+                if (iCol > 0)
+                {
+                    sStmt += L",";
+                }
+                sStmt += L"?";
+            }
+            sStmt += L")";
+
+            int iRet = sqlite3_prepare16_v2(m_spDb_, sStmt, -1, &pStmt, NULL);
+            if (SQLITE_OK != iRet)
+            {
+                CEString sErrTxt;
+                GetLastError(sErrTxt);
+                CEString sMsg(L"sqlite3_prepare16_v2 failed: ");
+                sMsg += sErrTxt;
+                throw CException(iRet, sMsg);
+            }
+
+            return (uint64_t)pStmt;
+        
+        }       //  uiPrepareForInsertOrReplace()
 
         void Bind (int iColumn, bool bValue)
         {
