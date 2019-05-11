@@ -33,7 +33,7 @@ public:
         if (error)
         {
             ASSERT(0);
-            wchar_t * szMsg = L"wmemmove_s failed.";
+            const wchar_t * szMsg = L"wmemmove_s failed.";
             ERROR_LOG (szMsg);
         }
         m_arrDescription[iLength] = L'\0';
