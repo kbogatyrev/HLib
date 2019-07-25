@@ -290,6 +290,27 @@ namespace Hlib
         
         }       //  uiPrepareForInsertOrReplace()
 
+        void Delete(const CEString& sStmt)
+        {
+            int iRet = sqlite3_prepare16_v2(m_spDb_, sStmt, -1, &m_pStmt, NULL);
+            if (SQLITE_OK != iRet)
+            {
+                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
+            }
+
+            iRet = sqlite3_step(m_pStmt);
+            if (SQLITE_OK != iRet && SQLITE_DONE != iRet)
+            {
+                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
+            }
+
+            iRet = sqlite3_finalize(m_pStmt);
+            if (SQLITE_OK != iRet)
+            {
+                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
+            }
+        }
+
         void Bind (int iColumn, bool bValue)
         {
             Bind (iColumn, bValue, m_pStmt);
@@ -633,7 +654,7 @@ namespace Hlib
             errno_t errorCode = wcstombs_s(&charsConverted, pchrUtf8Query, iMaxUtf8SizeInBytes, sQuery, sQuery.uiLength());
             if (errorCode != 0)
             {
-                throw CException(H_ERROR_POINTER, L"UTF-16 to URF-8 conversion error or bad query string.");
+                throw CException(H_ERROR_POINTER, L"UTF-16 to UTF-8 conversion error or bad query string.");
             }
 
             int iRet = sqlite3_exec(m_spDb_, pchrUtf8Query, NULL, NULL, NULL);
