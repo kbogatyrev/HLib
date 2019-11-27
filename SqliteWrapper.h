@@ -11,9 +11,6 @@ static const wchar_t * SZ_SEPARATOR = L"|";
 
 namespace Hlib
 {
-    // Progress delegate invoked from C#/CLR
-    typedef void(__stdcall *PROGRESS_CALLBACK_CLR) (int iPercentDone, bool bOperationComplete);
-
     class CSqlite
     {
     private:
@@ -806,6 +803,9 @@ namespace Hlib
             return sqlite3_column_int64 (m_pStmt, 0);
 
         }   //  llRows (...)
+
+        // Progress delegate invoked from C#/CLR
+        typedef void(__stdcall *PROGRESS_CALLBACK_CLR) (int iPercentDone, bool bOperationComplete);
 
         bool bExportTables(const CEString& sPath, const vector<CEString>& vecTables, PROGRESS_CALLBACK_CLR pProgress)
         {
