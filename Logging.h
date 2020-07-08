@@ -7,6 +7,8 @@
 #include <sstream>
 #include <strstream>
 #include <ios>
+#include <codecvt>
+#include <locale>
 
 #include <windows.h>
 #include <vector>
@@ -87,17 +89,24 @@ public:
                       int iErrCode = -1,
                       bool bWrite = false) 
     {
-        wstring sFormattedMsg = sFormat (szBriefDescription, szLocation, szDetailedDescription, iErrCode);
+        wstring wsFormattedMsg = sFormat (szBriefDescription, szLocation, szDetailedDescription, iErrCode);
         if (bWrite)
         {
-            bWriteLog (sFormattedMsg);
+            bWriteLog (wsFormattedMsg);
         }
         else
         {
-            m_vecLog.push_back (sFormattedMsg);
+            m_vecLog.push_back (wsFormattedMsg);
         }
+
+//        wcout << sFormattedMsg << endl;
+
+//        using convert_type = std::codecvt_utf8<wchar_t>;
+//        std::wstring_convert<convert_type, wchar_t> converter;
+
+//        cout << converter.to_bytes(wsFormattedMsg);
         
-//        DebugTrace(sFormattedMsg);
+        //        DebugTrace(sFormattedMsg);
 //        ATLTRACE2(sFormattedMsg.c_str());
 //        ATLTRACE2(L"\r\n");
 
@@ -111,7 +120,7 @@ public:
             return;
         }
 
-#ifdef _WINDOWS
+//#ifdef _WINDOWS
         OPENFILENAME ofn;       // common dialog box structure
         wchar_t szFile[260];       // buffer for file name
         HWND hwnd;              // owner window
@@ -159,7 +168,7 @@ public:
                 BOOL uiRet = WriteFile (hf, sLine.c_str(), (DWORD)sLine.length()*sizeof(wchar_t), &dwBytesWritten, NULL);
             }
         }
-#endif    
+//#endif    
 
     }   //  void Flush()
 
