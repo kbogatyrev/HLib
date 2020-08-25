@@ -298,13 +298,13 @@ namespace Hlib
             iRet = sqlite3_step(m_pStmt);
             if (SQLITE_OK != iRet && SQLITE_DONE != iRet)
             {
-                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
+                throw CException(iRet, L"sqlite3_step failed");
             }
 
             iRet = sqlite3_finalize(m_pStmt);
             if (SQLITE_OK != iRet)
             {
-                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
+                throw CException(iRet, L"sqlite3_finalize failed");
             }
         }
 
