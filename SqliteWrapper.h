@@ -901,7 +901,7 @@ namespace Hlib
                     iError = _fputts (sOut, ioOutStream);
                     if (0 != iError)
                     {
-                        throw CException (iError, L"Error writing export table header.");
+                        throw CException (iError, L"Error writing export table.");
                     }
                 
                     int iPd = (int) (((double)llRow/(double)llRowsToExport) * 100);
@@ -1229,11 +1229,17 @@ namespace Hlib
                 {
                     __int64 llId = _wtoi64(sLine.sGetField(0));
                     Bind(1, llId, pStmt);
+                    for (int iCol = 2; iCol < iColumns+1; ++iCol)
+                    {
+                        Bind(iCol, sLine.sGetField(iCol-1), pStmt);
+                    }
                 }
-
-                for (int iCol = 1; iCol < iColumns; ++iCol)
+                else
                 {
-                    Bind (iCol, sLine.sGetField (iCol), pStmt);
+                    for (int iCol = 1; iCol < iColumns; ++iCol)
+                    {
+                        Bind(iCol, sLine.sGetField(iCol), pStmt);
+                    }
                 }
             
                 InsertRow (pStmt);
