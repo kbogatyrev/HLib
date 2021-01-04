@@ -5,7 +5,7 @@
 #define LOGGING_H_INCLUDED
 
 #include <sstream>
-#include <strstream>
+//#include <strstream>
 #include <ios>
 #include <codecvt>
 #include <locale>
