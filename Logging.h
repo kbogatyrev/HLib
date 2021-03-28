@@ -9,6 +9,7 @@
 #include <ios>
 #include <codecvt>
 #include <locale>
+#include <memory>
 
 #include <windows.h>
 #include <vector>
@@ -29,7 +30,7 @@ namespace Hlib
 
 class CLogger;
 
-static CLogger * pLogger;
+static unique_ptr<CLogger> pLogger;
 
 class CLogger
 {
@@ -47,12 +48,12 @@ public:
     {
         if (pLogger)
         {
-            return pLogger;
+            return pLogger.get();
         }
 
-        pLogger = new CLogger();
+        pLogger = make_unique<CLogger>();
 
-        return pLogger;
+        return pLogger.get();
     }
 
 private:
@@ -64,11 +65,11 @@ public:
 #ifdef _DEBUG
         wstring sTxt = wstring(pwchrMyMsg) + wstring(L"\r\n");
         auto iNewLength = sTxt.length();
-        wchar_t * pTxt = new wchar_t[iNewLength + 1];
-        errno_t err = wcscpy_s(pTxt, iNewLength + 1, sTxt.c_str());
+        unique_ptr<wchar_t[]> pTxt = make_unique<wchar_t[]>(iNewLength + 1);
+        errno_t err = wcscpy_s(pTxt.get(), iNewLength + 1, sTxt.c_str());
         if (!err)
         {
-            _CrtDbgReportW(uiType, pwchrPath, uiLine, NULL, L"%s", pTxt);
+            _CrtDbgReportW(uiType, pwchrPath, uiLine, NULL, L"%s", pTxt.get());
         }
         else
         {
