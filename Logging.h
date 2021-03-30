@@ -30,7 +30,7 @@ namespace Hlib
 
 class CLogger;
 
-static unique_ptr<CLogger> pLogger;
+static CLogger * pLogger;
 
 class CLogger
 {
@@ -42,18 +42,20 @@ public:
         _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
     }
 
-    virtual ~CLogger() {}
+    virtual ~CLogger() {
+        delete pLogger;
+    }
 
     static CLogger * pGetInstance()
     {
         if (pLogger)
         {
-            return pLogger.get();
+            return pLogger;
         }
 
-        pLogger = make_unique<CLogger>();
+        pLogger = new CLogger();
 
-        return pLogger.get();
+        return pLogger;
     }
 
 private:
