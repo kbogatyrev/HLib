@@ -332,7 +332,7 @@ namespace Hlib
 
         void Bind (int iColumn, const CEString& sValue, sqlite3_stmt * pStmt)
         {
-            int iRet = sqlite3_bind_text16 (pStmt, iColumn, sValue, -1, SQLITE_STATIC);
+            int iRet = sqlite3_bind_text16 (pStmt, iColumn, (wchar_t *)sValue, -1, SQLITE_STATIC);
             if (SQLITE_OK != iRet)
             {
                 throw CException (iRet, L"sqlite3_bind_text16 failed");
