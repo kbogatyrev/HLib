@@ -3,6 +3,7 @@
 
 //#include "stdafx.h"
 //#include <ASSERT.h>
+#include <algorithm>
 #include "Enums.h"
 #include "Logging.h"
 
@@ -28,7 +29,7 @@ public:
 
     CException (int iErrorCode, const wchar_t * szDescription) : m_iErrorCode (iErrorCode)
     {
-        auto iLength = min (wcslen (szDescription), cuiMaxTextLength);
+        auto iLength = min ((unsigned int)wcslen (szDescription), cuiMaxTextLength);
         errno_t error = wmemmove_s (m_arrDescription, cuiMaxTextLength, szDescription, iLength);                
         if (error)
         {

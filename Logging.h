@@ -11,17 +11,18 @@
 #include <locale>
 #include <memory>
 
-#include <windows.h>
+//#include <windows.h>
 #include <vector>
 #include <string>
 #include <ctime>
 
-#include <crtdbg.h>
-#include <tchar.h>
+//#include <crtdbg.h>
+//#include <tchar.h>
 
-#include <Windows.h>
-#include <Commdlg.h>
+//#include <Windows.h>
+//#include <Commdlg.h>
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
@@ -81,7 +82,7 @@ public:
 
         wstringstream ioToString;
         ioToString << uiLine;
-        wstring sLocation = wstring(pwchrPath) + wstring(_T("\t")) + ioToString.str() + wstring(_T("\t")) + wstring(pwchrFunction);
+        wstring sLocation = wstring(pwchrPath) + wstring(L"\t") + ioToString.str() + wstring(L"\t") + wstring(pwchrFunction);
         CLogger * pErrorHandler = CLogger::pGetInstance();
         pErrorHandler->HandleError(pwchrMyMsg, sLocation.c_str());
     }
@@ -117,13 +118,13 @@ public:
 
     void Flush()
     {
+/*
         if (m_vecLog.empty())
         {
-            ::MessageBox (NULL, L"No errors", L"ECSting Test", MB_ICONINFORMATION);
+            ::MessageBoxW (NULL, L"No errors", L"ECSting Test", MB_ICONINFORMATION);
             return;
         }
 
-//#ifdef _WINDOWS
         OPENFILENAME ofn;       // common dialog box structure
         wchar_t szFile[260];       // buffer for file name
         HWND hwnd;              // owner window
@@ -171,7 +172,7 @@ public:
                 BOOL uiRet = WriteFile (hf, sLine.c_str(), (DWORD)sLine.length()*sizeof(wchar_t), &dwBytesWritten, NULL);
             }
         }
-//#endif    
+*/
 
     }   //  void Flush()
 
@@ -250,6 +251,7 @@ private:
 
     static bool bWriteLog (const wstring& sMsg)
     {
+/*
         const wchar_t * pchrName = L"\\\\.\\pipe\\HMessageLog"; 
   
         HANDLE hPipe = NULL;
@@ -281,7 +283,6 @@ private:
             } 
         }
 
-/*
    dwMode = PIPE_READMODE_MESSAGE; 
    fSuccess = SetNamedPipeHandleState( 
       hPipe,    // pipe handle 
@@ -293,7 +294,6 @@ private:
       printf("SetNamedPipeHandleState failed"); 
       return 0;
    }
-*/
 
         BOOL python = ConnectNamedPipe(hPipe, NULL);
         DWORD dwWritten = 0;
@@ -305,7 +305,8 @@ private:
         CloseHandle (hPipe); 
  
         return uiRet ? true : false;
-
+*/
+        return true;
     }   // bWriteLog()
 
 };
