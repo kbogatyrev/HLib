@@ -52,7 +52,7 @@ struct StLexemeHasher
 
     }   // sHash()
 
-    bool bSaveToDb (CSqlite * pDbHandle, __int64 llDescriptorId, __int64 llInflectionId)
+    bool bSaveToDb (CSqlite * pDbHandle, int64_t llDescriptorId, int64_t llInflectionId)
     {
         try
         {

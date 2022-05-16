@@ -1,8 +1,12 @@
 #ifndef H_SQLITE_WRAPPER
 #define H_SQLITE_WRAPPER
 
-#include <io.h>
+//#include <io.h>
 #include <memory>
+#include <string>
+#include <sys/stat.h>
+
+#include "Logging.h"
 #include "EString.h"
 #include "Exception.h"
 #include "Callbacks.h"
@@ -12,16 +16,24 @@ static const wchar_t * SZ_SEPARATOR = L"|";
 
 namespace Hlib
 {
-    auto sqlite_deleter = [](sqlite3* pSqlite) { sqlite3_close(pSqlite); };
-    using unique_sqlite3 = unique_ptr <sqlite3, decltype(sqlite_deleter)>;
+    struct SqliteDeleter
+    {
+        void operator() (sqlite3 * pSqlite)
+        {
+            if (pSqlite)
+            {
+                sqlite3_close(pSqlite);
+            }
+        }
+    };
 
     class CSqlite
     {
     private:
-    unique_sqlite3 m_spDb_;
+        unique_ptr<sqlite3, SqliteDeleter> m_spDb_;
 
     public:
-        CSqlite (const CEString& sDbPath) : m_spDb_(nullptr, sqlite_deleter)
+        CSqlite (const CEString& sDbPath) : m_spDb_(nullptr, SqliteDeleter())
         {
             sqlite3* pSqlite3 = nullptr;
             int iRet = sqlite3_open16 (sDbPath, &pSqlite3);
@@ -86,12 +98,12 @@ namespace Hlib
             }
         }
 
-        void PrepareForSelect (const CEString& sStmt, bool bIgnoreOnConflict = false)
+        void PrepareForSelect (const CEString& sStmt)
         {
             PrepareForSelect (sStmt, m_pStmt);
         }
 
-        uint64_t uiPrepareForSelect(const CEString& sStmt, bool bIgnoreOnConflict = false)
+        uint64_t uiPrepareForSelect(const CEString& sStmt)
         {
             sqlite3_stmt * pStmt = NULL;
             PrepareForSelect (sStmt, pStmt);
@@ -146,7 +158,7 @@ namespace Hlib
             return (uint64_t)pStmt;
         }
 
-        void PrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns, __int64 llPrimaryKey)
+        void PrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns, wchar_t llPrimaryKey)
         {
             uiPrepareForUpdate (sTable, vecColumns, llPrimaryKey, m_pStmt);
         }
@@ -156,7 +168,7 @@ namespace Hlib
             uiPrepareForUpdate (sTable, vecColumns, -1, m_pStmt);
         }
 
-        uint64_t uiPrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns, __int64 llPrimaryKey, sqlite3_stmt *& pStmt)
+        uint64_t uiPrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns, int64_t llPrimaryKey, sqlite3_stmt *& pStmt)
         {
             CEString sStmt = L"UPDATE ";
             sStmt += sTable;
@@ -294,24 +306,24 @@ namespace Hlib
 
         void Bind (int iColumn, uint64_t uiValue, sqlite3_stmt * pStmt)
         {
-            int iRet = sqlite3_bind_int64 (pStmt, iColumn, (__int64)uiValue);
+            int iRet = sqlite3_bind_int64 (pStmt, iColumn, (int64_t)uiValue);
             if (SQLITE_OK != iRet)
             {
                 throw CException (iRet, L"sqlite3_bind_int64 failed");
             }
         }
 
-        void Bind (int iColumn, __int64 llValue)
+        void Bind (int iColumn, int64_t llValue)
         {
             Bind (iColumn, llValue, m_pStmt);
         }
 
-        void Bind (int iColumn, __int64 llValue, uint64_t uiHandle)
+        void Bind (int iColumn, int64_t llValue, uint64_t uiHandle)
         {
             Bind (iColumn, llValue, (sqlite3_stmt *)uiHandle);
         }
 
-        void Bind (int iColumn, __int64 llValue, sqlite3_stmt * pStmt)
+        void Bind (int iColumn, int64_t llValue, sqlite3_stmt * pStmt)
         {
             int iRet = sqlite3_bind_int64 (pStmt, iColumn, llValue);
             if (SQLITE_OK != iRet)
@@ -480,19 +492,19 @@ namespace Hlib
             iValue = sqlite3_column_int (pStmt, iColumn);
         }
 
-        void GetData (int iColumn, __int64& ll_value)
+        void GetData (int iColumn, int64_t& ll_value)
         {
             GetData (iColumn, ll_value, m_pStmt);
         }
 
-        void GetData (int iColumn, __int64& llValue, uint64_t uiHandle)
+        void GetData (int iColumn, int64_t& llValue, uint64_t uiHandle)
         {
             GetData (iColumn, llValue, (sqlite3_stmt *)uiHandle);
         }
 
-        void GetData (int iColumn, __int64& llValue, sqlite3_stmt * pStmt)
+        void GetData (int iColumn, int64_t& llValue, sqlite3_stmt * pStmt)
         {
-            llValue = (unsigned __int64)sqlite3_column_int64 (pStmt, iColumn);
+            llValue = (int64_t)sqlite3_column_int64 (pStmt, iColumn);
         }
 
         void GetData(int iColumn, uint64_t& uiValue)
@@ -510,17 +522,17 @@ namespace Hlib
             uiValue = sqlite3_column_int(pStmt, iColumn);
         }
 
-//        void GetData(int iColumn, unsigned __int64& ull_value)
+//        void GetData(int iColumn, unsigned int64_t& ull_value)
 //        {
 //            GetData(iColumn, ull_value, m_pStmt);
 //        }
 
-        void GetData(int iColumn, unsigned __int64& ull_value, uint64_t uiHandle)
+        void GetData(int iColumn, uint64_t& ull_value, uint64_t uiHandle)
         {
             GetData(iColumn, ull_value, (sqlite3_stmt *)uiHandle);
         }
 
-        void GetData(int iColumn, unsigned __int64& ull_value, sqlite3_stmt * pStmt)
+        void GetData(int iColumn, uint64_t& ull_value, sqlite3_stmt * pStmt)
         {
             ull_value = sqlite3_column_int64(pStmt, iColumn);
         }
@@ -575,7 +587,7 @@ namespace Hlib
 
         void Exec(const CEString& sQuery)
         {
-            size_t charsConverted = 0;
+//            size_t charsConverted = 0;
             int iMaxUtf8SizeInBytes = 2 * sQuery.uiLength() + 1;
 
             char * pchrUtf8Query = new char[iMaxUtf8SizeInBytes];
@@ -584,7 +596,7 @@ namespace Hlib
                 throw CException(H_ERROR_POINTER, L"Unable to allocate memory.");
             }
 
-            errno_t errorCode = wcstombs_s(&charsConverted, pchrUtf8Query, iMaxUtf8SizeInBytes, sQuery, sQuery.uiLength());
+            int errorCode = wcstombs(pchrUtf8Query, sQuery, sQuery.uiLength());
             if (errorCode != 0)
             {
                 throw CException(H_ERROR_POINTER, L"UTF-16 to UTF-8 conversion error or bad query string.");
@@ -601,17 +613,17 @@ namespace Hlib
             delete[] pchrUtf8Query;
         }
 
-        __int64 llGetLastKey()
+        int64_t llGetLastKey()
         {
             return llGetLastKey (m_pStmt);
         }
 
-        __int64 llGetLastKey (uint64_t uiHandle)
+        int64_t llGetLastKey (uint64_t uiHandle)
         {
             return llGetLastKey ((sqlite3_stmt *)uiHandle);
         }
 
-        __int64 llGetLastKey (sqlite3_stmt * pStmt)
+        int64_t llGetLastKey (sqlite3_stmt * pStmt)
         {
             if (NULL == m_spDb_)
             {
@@ -713,7 +725,7 @@ namespace Hlib
 
         }   //  TableEmpty (...)
 
-        __int64 llRows (const CEString& sTable)
+        int64_t llRows (const CEString& sTable)
         {
             CEString sQuery (L"SELECT COUNT (*) FROM ");
             sQuery += sTable;
@@ -741,27 +753,24 @@ namespace Hlib
         }   //  llRows (...)
 
         // Progress delegate invoked from C#/CLR
-        typedef void(__stdcall *PROGRESS_CALLBACK_CLR) (int iPercentDone, bool bOperationComplete);
+        typedef void(*PROGRESS_CALLBACK_CLR) (int iPercentDone, bool bOperationComplete);
 
-        bool bExportTables(const CEString& sPath, const vector<CEString>& vecTables, PROGRESS_CALLBACK_CLR pProgress)
+        bool bExportTables(CEString& sPath, const vector<CEString>& vecTables, PROGRESS_CALLBACK_CLR pProgress)
         {
             if (NULL == m_spDb_)
             {
                 throw CException (-1, L"No DB handle");
             }
 
-            FILE * ioOutStream = NULL;
-            errno_t iError = _tfopen_s (&ioOutStream, sPath, L"w, ccs=UNICODE");
-            if (0 != iError)
+            auto ioOutStream = fopen(sPath.stl_sToUtf8().c_str(), "w");
+            if (!ioOutStream)
             {
-                CEString sMsg(L"Unable to open export file, error ");
-                sMsg += CEString::sToString(iError);
-                throw CException (-1, sMsg);
+                throw CException (-1, L"Unable to open export file.");
             }
 
             vector<CEString>::const_iterator itTable  = vecTables.begin();
 
-            __int64 llRowsToExport = 0;
+            int64_t llRowsToExport = 0;
             for (itTable = vecTables.begin(); 
                  itTable != vecTables.end();
                  ++itTable)
@@ -774,7 +783,7 @@ namespace Hlib
                 return true;
             }
 
-            __int64 llRow = 0;
+            int64_t llRow = 0;
         
             for (vector<CEString>::const_iterator itTable = vecTables.begin(); 
                  itTable != vecTables.end();
@@ -794,10 +803,10 @@ namespace Hlib
 
                 CEString sTableName (*itTable);
                 sTableName += L"\n";
-                iError = _fputts (sTableName, ioOutStream);
-                if (0 != iError)
+                iRet = fputs (sTableName.stl_sToUtf8().c_str(), ioOutStream);
+                if (iRet < 0)
                 {
-                    ERROR_LOG (L"Error writing export table name. \n");
+                    ERROR_LOG(L"Error writing export table name. \n");
                 }
 
                 CEString sHeader;
@@ -812,10 +821,10 @@ namespace Hlib
                 }
                 sHeader += L"\n";
 
-                iError = _fputts (sHeader, ioOutStream);
-                if (0 != iError)
+                iRet = fputs (sHeader.stl_sToUtf8().c_str(), ioOutStream);
+                if (iRet < 0)
                 {
-                    ERROR_LOG (L"Error writing export table header. \n");
+                    ERROR_LOG(L"Error writing export table header. \n");
                 }
 
                 int iPercentDone = 0;
@@ -834,10 +843,10 @@ namespace Hlib
                     }
                     sOut += L"\n";
 
-                    iError = _fputts (sOut, ioOutStream);
-                    if (0 != iError)
+                    iRet = fputs(sOut.stl_sToUtf8().c_str(), ioOutStream);
+                    if (iRet <0)
                     {
-                        throw CException (iError, L"Error writing export table.");
+                        throw CException (iRet, L"Error writing export table.");
                     }
                 
                     int iPd = (int) (((double)llRow/(double)llRowsToExport) * 100);
@@ -851,10 +860,10 @@ namespace Hlib
 
                 }       //  while (...)
             
-                iError = _fputts (L"\n", ioOutStream);
-                if (0 != iError)
+                iRet = fputs ("\n", ioOutStream);
+                if (iRet < 0)
                 {
-                    ERROR_LOG (L"Error writing terminating line. \n");
+                    ERROR_LOG(L"Error writing terminating line. \n");
                 }
 
             }   //  for (vector<CEString> ...
@@ -870,48 +879,40 @@ namespace Hlib
         //
         // Note: existing tables will be overwritten
         //
-        bool bImportTables(const CEString& sPath, bool bMerge, PROGRESS_CALLBACK_CLR pProgress)
+        bool bImportTables(CEString& sPath, bool bMerge, PROGRESS_CALLBACK_CLR pProgress)
         {
-            if (NULL == m_spDb_)
+            if (nullptr == m_spDb_)
             {
                 throw CException (-1, L"No DB handle");
             }
 
-            FILE * ioInStream = NULL;
-            errno_t iError = _tfopen_s (&ioInStream, sPath, L"r, ccs=UNICODE");
-            if (0 != iError)
+            auto ioInStream = fopen(sPath.stl_sToUtf8().c_str(), "r");
+            if (!ioInStream)
             {
-                CEString sMsg(L"Unable to open import file, error ");
-                    sMsg += CEString::sToString(iError);
-                throw CException (-1, sMsg);
+                throw CException (-1, L"Unable to open import file.");
             }
 
             int iCharsRead = 0;
-            int iPercentDone = 0;
+//            int iPercentDone = 0;
     //        int iEntriesRead = 0;
 
-            TCHAR szLineBuf[10000];
-
-            while (!feof (ioInStream))
+            char szLineBuf[10000];
+            while (!feof(ioInStream))
             {
                 //
                 // Get table name
                 //
                 CEString sTable;
-                while (!feof (ioInStream) && sTable.bIsEmpty())
+                while (!feof(ioInStream) && sTable.bIsEmpty())
                 {
-                    TCHAR * szRet = _fgetts (szLineBuf, 10000, ioInStream);
-                    if (NULL == szRet)
+                    char * szRet = fgets(szLineBuf, 10000, ioInStream);
+                    if (nullptr == szRet)
                     {
-                        iError = ferror (ioInStream);
-                        if (0 != iError)
-                        {
-                            throw CException (iError, L"Error reading table name.");
-                        }
+                        throw CException (-1, L"Error reading table name.");
                     }
                     else
                     {
-                        sTable = szLineBuf;
+                        sTable = CEString::sFromUtf8(szLineBuf);
                     }
                 }
 
@@ -922,7 +923,7 @@ namespace Hlib
 
                 if (sTable.bIsEmpty())
                 {
-                    ASSERT(0);
+                    assert(0);
                     throw CException (-1, L"Empty table name.");
                 }
 
@@ -934,18 +935,14 @@ namespace Hlib
                 CEString sDescriptor;
                 while (!feof (ioInStream) && sDescriptor.bIsEmpty())
                 {
-                    TCHAR * szRet = _fgetts (szLineBuf, 10000, ioInStream);
-                    if (NULL == szRet)
+                    char * szLineBuf = fgets(szLineBuf, 10000, ioInStream);
+                    if (nullptr == szLineBuf)
                     {
-                        iError = ferror (ioInStream);
-                        if (0 != iError)
-                        {
-                            throw CException (iError, L"Error reading import file header.");
-                        }
+                        throw CException (-1, L"Error reading import file header.");
                     }
                     else
                     {
-                        sDescriptor = szLineBuf;
+                        sDescriptor = CEString::sFromUtf8(szLineBuf);
                     }
                 }
 
@@ -958,7 +955,7 @@ namespace Hlib
 
                 if (sDescriptor.bIsEmpty())
                 {
-                    ASSERT(0);
+                    assert(0);
                     throw CException (-1, L"Empty table descriptor.");
                 }
 
@@ -1074,7 +1071,13 @@ namespace Hlib
                       bool bAutoincrement,
                       PROGRESS_CALLBACK_CLR pProgress)
         {
-            long lFileLength = _filelength (_fileno (ioInstream))/sizeof (wchar_t);
+            struct stat stStatBuf;
+            auto iRet = fstat(fileno(ioInstream), &stStatBuf);
+            if (iRet != 0)
+            {
+                throw CException(iRet, L"Unable to stat import table file.");
+            }
+            long lFileLength = stStatBuf.st_size;
             int iPercentDone = 0;
 
             CEString sStmt = L"INSERT INTO ";
@@ -1116,7 +1119,7 @@ namespace Hlib
             sSeparators += L", \n";
             int iEntriesRead = 0;
 
-            TCHAR szLineBuf[10000];
+            char szLineBuf[10000];
             CEString sLine;
             sLine.ResetSeparators();
             sLine.SetBreakChars(sSeparators);
@@ -1128,22 +1131,16 @@ namespace Hlib
                     throw CException (iRet, L"sqlite3_prepare16_v2 failed");
                 }
 
-                TCHAR * szRet = _fgetts (szLineBuf, 10000, ioInstream);
-                sLine = szLineBuf;
-                sLine.Trim (sSeparators);
-                if (NULL == szRet)
+                char * szRet = fgets (szLineBuf, 10000, ioInstream);
+                if (nullptr == szRet)
                 {
-                    errno_t iError = ferror (ioInstream);
-                    if (0 != iError)
-                    {
-                        throw CException (iRet, L"Error reading import file.");
-                    }
-                    else
-                    {
-                        continue;
-                    }
+                    throw CException (-1, L"Error reading table name.");
                 }
-
+                else
+                {
+                    sLine = CEString::sFromUtf8(szLineBuf);
+                }
+                sLine.Trim (sSeparators);
                 if (sLine.bIsEmpty())
                 {
                     break;
@@ -1151,19 +1148,21 @@ namespace Hlib
 
                 iCharsRead += sLine.uiLength();
 
-                if (sLine.uiNFields() != iColumns)
+                if ((int)sLine.uiNFields() != iColumns)
                 {
                     CEString sMsg(L"Number of fields does not match number of columns: ");
                     sMsg += sLine;                    
                     sMsg += L"\n";
-                    ERROR_LOG(sMsg);
+                    wchar_t * szMsg = sMsg;
+                    ERROR_LOG(szMsg);
 //                    throw CException (-1, L"Number of fields does not match number of columns.");
                     continue;
                 }
 
                 if (!bAutoincrement)
                 {
-                    __int64 llId = _wtoi64(sLine.sGetField(0));
+                    wstring wstrColumn(sLine.sGetField(0));
+                    int64_t llId = stoll(wstrColumn.c_str());
                     Bind(1, llId, pStmt);
                     for (int iCol = 2; iCol < iColumns+1; ++iCol)
                     {
