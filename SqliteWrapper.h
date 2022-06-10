@@ -12,13 +12,13 @@
 #include "Callbacks.h"
 #include "sqlite3.h"
 
-static const wchar_t * SZ_SEPARATOR = L"|";
+static const wchar_t* SZ_SEPARATOR = L"|";
 
 namespace Hlib
 {
     struct SqliteDeleter
     {
-        void operator() (sqlite3 * pSqlite)
+        void operator() (sqlite3* pSqlite)
         {
             if (pSqlite)
             {
@@ -32,21 +32,47 @@ namespace Hlib
     private:
         unique_ptr<sqlite3, SqliteDeleter> m_spDb_;
 
+#ifndef WIN32
+    private:
+        unique_ptr<char16_t[]> pToWchar16(const CEString& s)
+        {
+            auto pStr16 = make_unique<char16_t[]>(s.uiLength()+1);
+            for (int i = 0; i < (int)s.uiLength(); ++i) {
+                pStr16[i] = (char16_t)s[i];
+            }
+            pStr16[s.uiLength()] = u'\0';
+            return pStr16;
+        }
+
+        unique_ptr<wchar_t[]> pToWchar32(const void * pUtf16AsVoid, int iBytes)
+        {
+            auto pUtf32 = make_unique<wchar_t[]>((iBytes/2)+1);
+            for (int i = 0; i < iBytes/2; ++i) {
+                memcpy(&pUtf32[i], (char*)pUtf16AsVoid+(2*i), 2);
+            }
+            return pUtf32;
+        }
+#endif
+
     public:
-        CSqlite (const CEString& sDbPath) : m_spDb_(nullptr, SqliteDeleter())
+        CSqlite(const CEString& sDbPath) : m_spDb_(nullptr, SqliteDeleter())
         {
             sqlite3* pSqlite3 = nullptr;
-            int iRet = sqlite3_open16 (sDbPath, &pSqlite3);
-                if (SQLITE_OK != iRet)
-                {
-                    pSqlite3 = nullptr;
-                    throw CException (iRet, L"sqlite3_open16 failed.");
-                }
-                m_spDb_.reset(pSqlite3);
+#ifdef WIN32
+            int iRet = sqlite3_open16(sDbPath, &pSqlite3);
+#else
+            int iRet = sqlite3_open16(pToWchar16(sDbPath).get(), &pSqlite3);
+#endif
+            if (SQLITE_OK != iRet)
+            {
+                pSqlite3 = nullptr;
+                throw CException(iRet, L"sqlite3_open16 failed.");
+            }
+            m_spDb_.reset(pSqlite3);
         }
 
     private:
-        sqlite3_stmt * m_pStmt;
+        sqlite3_stmt* m_pStmt;
         CEString m_sDbPath;
 
         int m_iExtendedErrCode;
@@ -56,14 +82,14 @@ namespace Hlib
         {
             if (NULL == m_spDb_)
             {
-                throw CException (-1, L"No DB handle");
+                throw CException(-1, L"No DB handle");
             }
 
             int iRet = SQLITE_OK;
             iRet = sqlite3_exec(m_spDb_.get(), "BEGIN TRANSACTION", NULL, NULL, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_exec failed for transaction start");
+                throw CException(iRet, L"sqlite3_exec failed for transaction start");
             }
         }
 
@@ -71,16 +97,16 @@ namespace Hlib
         {
             if (NULL == m_spDb_)
             {
-                throw CException (-1, L"No DB handle");
+                throw CException(-1, L"No DB handle");
             }
 
             int iRet = SQLITE_OK;
             iRet = sqlite3_exec(m_spDb_.get(), "END TRANSACTION", NULL, NULL, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_exec failed for transaction end");
+                throw CException(iRet, L"sqlite3_exec failed for transaction end");
             }
-    
+
         }
 
         void RollbackTransaction()
@@ -98,33 +124,37 @@ namespace Hlib
             }
         }
 
-        void PrepareForSelect (const CEString& sStmt)
+        void PrepareForSelect(const CEString& sStmt)
         {
-            PrepareForSelect (sStmt, m_pStmt);
+            PrepareForSelect(sStmt, m_pStmt);
         }
 
         uint64_t uiPrepareForSelect(const CEString& sStmt)
         {
-            sqlite3_stmt * pStmt = NULL;
-            PrepareForSelect (sStmt, pStmt);
+            sqlite3_stmt* pStmt = NULL;
+            PrepareForSelect(sStmt, pStmt);
             return (uint64_t)pStmt;
         }
 
-        void PrepareForSelect(const CEString& sStmt, sqlite3_stmt *& pStmt)
+        void PrepareForSelect(const CEString& sStmt, sqlite3_stmt*& pStmt)
         {
-            int iRet = sqlite3_prepare16_v2 (m_spDb_.get(), sStmt, -1, &pStmt, NULL);
+#ifdef WIN32
+            int iRet = sqlite3_prepare16_v2(m_spDb_.get(), sStmt, -1, &pStmt, NULL);
+#else
+            int iRet = sqlite3_prepare16_v2(m_spDb_.get(), pToWchar16(sStmt).get(), -1, &pStmt, NULL);
+#endif
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_prepare16_v2 failed");
+                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
             }
         }
 
-        void PrepareForInsert (const CEString& sTable, int iColumns, bool bIgnoreOnConflict = false)
+        void PrepareForInsert(const CEString& sTable, int iColumns, bool bIgnoreOnConflict = false)
         {
-            uiPrepareForInsert (sTable, iColumns, m_pStmt, bIgnoreOnConflict);
+            uiPrepareForInsert(sTable, iColumns, m_pStmt, bIgnoreOnConflict);
         }
 
-        uint64_t uiPrepareForInsert (const CEString& sTable, int iColumns, sqlite3_stmt *& pStmt, bool bIgnoreOnConflict = false)
+        uint64_t uiPrepareForInsert(const CEString& sTable, int iColumns, sqlite3_stmt*& pStmt, bool bIgnoreOnConflict = false)
         {
             CEString sStmt(L"INSERT ");
             if (bIgnoreOnConflict)
@@ -145,30 +175,30 @@ namespace Hlib
             }
             sStmt += L")";
 
-            int iRet = sqlite3_prepare16_v2 (m_spDb_.get(), sStmt, -1, &pStmt, NULL);
+            int iRet = sqlite3_prepare16_v2(m_spDb_.get(), sStmt, -1, &pStmt, NULL);
             if (SQLITE_OK != iRet)
             {
                 CEString sErrTxt;
                 GetLastError(sErrTxt);
                 CEString sMsg(L"sqlite3_prepare16_v2 failed: ");
                 sMsg += sErrTxt;
-                throw CException (iRet, sMsg);
+                throw CException(iRet, sMsg);
             }
 
             return (uint64_t)pStmt;
         }
 
-        void PrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns, wchar_t llPrimaryKey)
+        void PrepareForUpdate(const CEString& sTable, const vector<CEString>& vecColumns, wchar_t llPrimaryKey)
         {
-            uiPrepareForUpdate (sTable, vecColumns, llPrimaryKey, m_pStmt);
+            uiPrepareForUpdate(sTable, vecColumns, llPrimaryKey, m_pStmt);
         }
 
-        void PrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns)
+        void PrepareForUpdate(const CEString& sTable, const vector<CEString>& vecColumns)
         {
-            uiPrepareForUpdate (sTable, vecColumns, -1, m_pStmt);
+            uiPrepareForUpdate(sTable, vecColumns, -1, m_pStmt);
         }
 
-        uint64_t uiPrepareForUpdate (const CEString& sTable, const vector<CEString>& vecColumns, int64_t llPrimaryKey, sqlite3_stmt *& pStmt)
+        uint64_t uiPrepareForUpdate(const CEString& sTable, const vector<CEString>& vecColumns, int64_t llPrimaryKey, sqlite3_stmt*& pStmt)
         {
             CEString sStmt = L"UPDATE ";
             sStmt += sTable;
@@ -190,14 +220,14 @@ namespace Hlib
                 sStmt += CEString::sToString(llPrimaryKey);
             }
 
-            int iRet = sqlite3_prepare16_v2 (m_spDb_.get(), sStmt, -1, &pStmt, NULL);
+            int iRet = sqlite3_prepare16_v2(m_spDb_.get(), sStmt, -1, &pStmt, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_prepare16_v2 failed");
+                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
             }
 
             return (uint64_t)pStmt;
-        
+
         }       //  uiPrepareForUpdate()
 
         void PrepareForInsertOrReplace(const CEString& sTable, int iColumns)
@@ -205,7 +235,7 @@ namespace Hlib
             uiPrepareForInsertOrReplace(sTable, iColumns, m_pStmt);
         }
 
-        uint64_t uiPrepareForInsertOrReplace(const CEString& sTable, int iColumns, sqlite3_stmt *& pStmt)
+        uint64_t uiPrepareForInsertOrReplace(const CEString& sTable, int iColumns, sqlite3_stmt*& pStmt)
         {
             CEString sStmt(L"INSERT ");
             sStmt += L"OR REPLACE INTO ";
@@ -232,7 +262,7 @@ namespace Hlib
             }
 
             return (uint64_t)pStmt;
-        
+
         }       //  uiPrepareForInsertOrReplace()
 
         void Delete(const CEString& sStmt)
@@ -256,255 +286,255 @@ namespace Hlib
             }
         }
 
-        void Bind (int iColumn, bool bValue)
+        void Bind(int iColumn, bool bValue)
         {
-            Bind (iColumn, bValue, m_pStmt);
+            Bind(iColumn, bValue, m_pStmt);
         }
 
-        void Bind (int iColumn, bool bValue, uint64_t uiHandle)
+        void Bind(int iColumn, bool bValue, uint64_t uiHandle)
         {
-            Bind (iColumn, bValue, (sqlite3_stmt *)uiHandle);
+            Bind(iColumn, bValue, (sqlite3_stmt*)uiHandle);
         }
 
-        void Bind (int iColumn, bool bValue, sqlite3_stmt * pStmt)
+        void Bind(int iColumn, bool bValue, sqlite3_stmt* pStmt)
         {
-            int iRet = sqlite3_bind_int (pStmt, iColumn, bValue);
+            int iRet = sqlite3_bind_int(pStmt, iColumn, bValue);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_bind_int failed");
+                throw CException(iRet, L"sqlite3_bind_int failed");
             }
         }
 
-        void Bind (int iColumn, int iValue)
+        void Bind(int iColumn, int iValue)
         {
-            Bind (iColumn, iValue, m_pStmt);
+            Bind(iColumn, iValue, m_pStmt);
         }
 
-        void Bind (int iColumn, int iValue, uint64_t uiHandle)
+        void Bind(int iColumn, int iValue, uint64_t uiHandle)
         {
-            Bind (iColumn, iValue, (sqlite3_stmt *)uiHandle);
+            Bind(iColumn, iValue, (sqlite3_stmt*)uiHandle);
         }
 
-        void Bind (int iColumn, int iValue, sqlite3_stmt * pStmt)
+        void Bind(int iColumn, int iValue, sqlite3_stmt* pStmt)
         {
-            int iRet = sqlite3_bind_int (pStmt, iColumn, iValue);
+            int iRet = sqlite3_bind_int(pStmt, iColumn, iValue);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_bind_int failed");
+                throw CException(iRet, L"sqlite3_bind_int failed");
             }
         }
 
-        void Bind (int iColumn, uint64_t uiValue)
+        void Bind(int iColumn, uint64_t uiValue)
         {
-            Bind (iColumn, uiValue, m_pStmt);
+            Bind(iColumn, uiValue, m_pStmt);
         }
 
-        void Bind (int iColumn, uint64_t uiValue, uint64_t uiHandle)
+        void Bind(int iColumn, uint64_t uiValue, uint64_t uiHandle)
         {
-            Bind (iColumn, uiValue, (sqlite3_stmt *)uiHandle);
+            Bind(iColumn, uiValue, (sqlite3_stmt*)uiHandle);
         }
 
-        void Bind (int iColumn, uint64_t uiValue, sqlite3_stmt * pStmt)
+        void Bind(int iColumn, uint64_t uiValue, sqlite3_stmt* pStmt)
         {
-            int iRet = sqlite3_bind_int64 (pStmt, iColumn, (int64_t)uiValue);
+            int iRet = sqlite3_bind_int64(pStmt, iColumn, (int64_t)uiValue);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_bind_int64 failed");
+                throw CException(iRet, L"sqlite3_bind_int64 failed");
             }
         }
 
-        void Bind (int iColumn, int64_t llValue)
+        void Bind(int iColumn, int64_t llValue)
         {
-            Bind (iColumn, llValue, m_pStmt);
+            Bind(iColumn, llValue, m_pStmt);
         }
 
-        void Bind (int iColumn, int64_t llValue, uint64_t uiHandle)
+        void Bind(int iColumn, int64_t llValue, uint64_t uiHandle)
         {
-            Bind (iColumn, llValue, (sqlite3_stmt *)uiHandle);
+            Bind(iColumn, llValue, (sqlite3_stmt*)uiHandle);
         }
 
-        void Bind (int iColumn, int64_t llValue, sqlite3_stmt * pStmt)
+        void Bind(int iColumn, int64_t llValue, sqlite3_stmt* pStmt)
         {
-            int iRet = sqlite3_bind_int64 (pStmt, iColumn, llValue);
+            int iRet = sqlite3_bind_int64(pStmt, iColumn, llValue);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_bind_int64 failed");
+                throw CException(iRet, L"sqlite3_bind_int64 failed");
             }
         }
 
-        void Bind (int iColumn, const CEString& sValue)
+        void Bind(int iColumn, const CEString& sValue)
         {
-            Bind (iColumn, sValue, m_pStmt);
+            Bind(iColumn, sValue, m_pStmt);
         }
 
-        void Bind (int iColumn, const CEString& sValue, uint64_t uiHandle)
+        void Bind(int iColumn, const CEString& sValue, uint64_t uiHandle)
         {
-            Bind (iColumn, sValue, (sqlite3_stmt *)uiHandle);
+            Bind(iColumn, sValue, (sqlite3_stmt*)uiHandle);
         }
 
-        void Bind (int iColumn, const CEString& sValue, sqlite3_stmt * pStmt)
+        void Bind(int iColumn, const CEString& sValue, sqlite3_stmt* pStmt)
         {
-            int iRet = sqlite3_bind_text16 (pStmt, iColumn, (wchar_t *)sValue, -1, SQLITE_STATIC);
+            int iRet = sqlite3_bind_text16(pStmt, iColumn, (wchar_t*)sValue, -1, SQLITE_STATIC);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_bind_text16 failed");
+                throw CException(iRet, L"sqlite3_bind_text16 failed");
             }
         }
 
         void InsertRow()
         {
-            InsertRow (m_pStmt);
+            InsertRow(m_pStmt);
         }
 
-        void InsertRow (uint64_t uiHandle)
+        void InsertRow(uint64_t uiHandle)
         {
-            InsertRow ((sqlite3_stmt *)uiHandle);
+            InsertRow((sqlite3_stmt*)uiHandle);
         }
 
-        void InsertRow (sqlite3_stmt * pStmt)
+        void InsertRow(sqlite3_stmt* pStmt)
         {
             if (NULL == m_spDb_)
             {
-                throw CException (-1, L"No DB handle");
+                throw CException(-1, L"No DB handle");
             }
 
             if (NULL == pStmt)
             {
-                throw CException (-1, L"No statement");
+                throw CException(-1, L"No statement");
             }
 
-            int iRet = sqlite3_step (pStmt);
+            int iRet = sqlite3_step(pStmt);
             if (SQLITE_DONE != iRet)
             {
-                throw CException (iRet, L"sqlite3_step failed");
+                throw CException(iRet, L"sqlite3_step failed");
             }
 
-            iRet = sqlite3_reset (pStmt);
+            iRet = sqlite3_reset(pStmt);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_reset failed");
+                throw CException(iRet, L"sqlite3_reset failed");
             }
 
         }   // InsertRow()
 
         void UpdateRow()
         {
-            UpdateRow (m_pStmt);
+            UpdateRow(m_pStmt);
         }
 
-        void UpdateRow (uint64_t uiHandle)
+        void UpdateRow(uint64_t uiHandle)
         {
-            UpdateRow ((sqlite3_stmt *)uiHandle);
+            UpdateRow((sqlite3_stmt*)uiHandle);
         }
 
-        void UpdateRow (sqlite3_stmt * pStmt)
+        void UpdateRow(sqlite3_stmt* pStmt)
         {
             if (NULL == m_spDb_)
             {
-                throw CException (-1, L"No DB handle");
+                throw CException(-1, L"No DB handle");
             }
 
             if (NULL == pStmt)
             {
-                throw CException (-1, L"No statement");
+                throw CException(-1, L"No statement");
             }
 
-            int iRet = sqlite3_step (pStmt);
+            int iRet = sqlite3_step(pStmt);
             if (SQLITE_DONE != iRet)
             {
-                throw CException (iRet, L"sqlite3_step failed");
+                throw CException(iRet, L"sqlite3_step failed");
             }
 
-            iRet = sqlite3_reset (pStmt);
+            iRet = sqlite3_reset(pStmt);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_reset failed");
+                throw CException(iRet, L"sqlite3_reset failed");
             }
 
         }   // UpdateRow()
 
         bool bGetRow()
         {
-            return bGetRow (m_pStmt);
+            return bGetRow(m_pStmt);
         }
 
-        bool bGetRow (uint64_t uiHandle)
+        bool bGetRow(uint64_t uiHandle)
         {
-            return bGetRow ((sqlite3_stmt *)uiHandle);
+            return bGetRow((sqlite3_stmt*)uiHandle);
         }
 
-        bool bGetRow (sqlite3_stmt * pStmt)
+        bool bGetRow(sqlite3_stmt* pStmt)
         {
             if (NULL == m_spDb_)
             {
-                throw CException (-1, L"No DB handle");
+                throw CException(-1, L"No DB handle");
             }
 
             if (NULL == pStmt)
             {
-                throw CException (-1, L"No statement");
+                throw CException(-1, L"No statement");
             }
 
-            int iRet = sqlite3_step (pStmt);
+            int iRet = sqlite3_step(pStmt);
             if (SQLITE_DONE == iRet)
             {
-                iRet = sqlite3_reset (pStmt);
+                iRet = sqlite3_reset(pStmt);
                 return false;
             }
 
             if (SQLITE_ROW != iRet)
             {
-                throw CException (iRet, L"sqlite3_step failed");
+                throw CException(iRet, L"sqlite3_step failed");
             }
 
             return true;
 
         }   // bGetRow (...)
 
-        void GetData (int iColumn, bool& bValue)
+        void GetData(int iColumn, bool& bValue)
         {
-            GetData (iColumn, bValue, m_pStmt);
+            GetData(iColumn, bValue, m_pStmt);
         }
 
-        void GetData (int iColumn, bool& bValue, uint64_t uiHandle)
+        void GetData(int iColumn, bool& bValue, uint64_t uiHandle)
         {
-            GetData (iColumn, bValue, (sqlite3_stmt *)uiHandle);
+            GetData(iColumn, bValue, (sqlite3_stmt*)uiHandle);
         }
 
-        void GetData (int iColumn, bool& bValue, sqlite3_stmt * pStmt)
+        void GetData(int iColumn, bool& bValue, sqlite3_stmt* pStmt)
         {
-            int iRet = sqlite3_column_int (pStmt, iColumn);
+            int iRet = sqlite3_column_int(pStmt, iColumn);
             bValue = (iRet != 0);
         }
 
-        void GetData (int iColumn, int& iValue)
+        void GetData(int iColumn, int& iValue)
         {
-            GetData (iColumn, iValue, m_pStmt);
+            GetData(iColumn, iValue, m_pStmt);
         }
 
-        void GetData (int iColumn, int& iValue, uint64_t uiHandle)
+        void GetData(int iColumn, int& iValue, uint64_t uiHandle)
         {
-            GetData (iColumn, iValue, (sqlite3_stmt *)uiHandle);
+            GetData(iColumn, iValue, (sqlite3_stmt*)uiHandle);
         }
 
-        void GetData (int iColumn, int& iValue, sqlite3_stmt * pStmt)
+        void GetData(int iColumn, int& iValue, sqlite3_stmt* pStmt)
         {
-            iValue = sqlite3_column_int (pStmt, iColumn);
+            iValue = sqlite3_column_int(pStmt, iColumn);
         }
 
-        void GetData (int iColumn, int64_t& ll_value)
+        void GetData(int iColumn, int64_t& ll_value)
         {
-            GetData (iColumn, ll_value, m_pStmt);
+            GetData(iColumn, ll_value, m_pStmt);
         }
 
-        void GetData (int iColumn, int64_t& llValue, uint64_t uiHandle)
+        void GetData(int iColumn, int64_t& llValue, uint64_t uiHandle)
         {
-            GetData (iColumn, llValue, (sqlite3_stmt *)uiHandle);
+            GetData(iColumn, llValue, (sqlite3_stmt*)uiHandle);
         }
 
-        void GetData (int iColumn, int64_t& llValue, sqlite3_stmt * pStmt)
+        void GetData(int iColumn, int64_t& llValue, sqlite3_stmt* pStmt)
         {
-            llValue = (int64_t)sqlite3_column_int64 (pStmt, iColumn);
+            llValue = (int64_t)sqlite3_column_int64(pStmt, iColumn);
         }
 
         void GetData(int iColumn, uint64_t& uiValue)
@@ -514,83 +544,88 @@ namespace Hlib
 
         void GetData(int iColumn, unsigned int& uiValue, uint64_t uiHandle)
         {
-            GetData(iColumn, uiValue, (sqlite3_stmt *)uiHandle);
+            GetData(iColumn, uiValue, (sqlite3_stmt*)uiHandle);
         }
 
-        void GetData(int iColumn, unsigned int& uiValue, sqlite3_stmt * pStmt)
+        void GetData(int iColumn, unsigned int& uiValue, sqlite3_stmt* pStmt)
         {
             uiValue = sqlite3_column_int(pStmt, iColumn);
         }
 
-//        void GetData(int iColumn, unsigned int64_t& ull_value)
-//        {
-//            GetData(iColumn, ull_value, m_pStmt);
-//        }
+        //        void GetData(int iColumn, unsigned int64_t& ull_value)
+        //        {
+        //            GetData(iColumn, ull_value, m_pStmt);
+        //        }
 
         void GetData(int iColumn, uint64_t& ull_value, uint64_t uiHandle)
         {
-            GetData(iColumn, ull_value, (sqlite3_stmt *)uiHandle);
+            GetData(iColumn, ull_value, (sqlite3_stmt*)uiHandle);
         }
 
-        void GetData(int iColumn, uint64_t& ull_value, sqlite3_stmt * pStmt)
+        void GetData(int iColumn, uint64_t& ull_value, sqlite3_stmt* pStmt)
         {
             ull_value = sqlite3_column_int64(pStmt, iColumn);
         }
 
         void GetData(int iColumn, CEString& sValue)
         {
-            GetData (iColumn, sValue, m_pStmt);
+            GetData(iColumn, sValue, m_pStmt);
         }
 
-        void GetData (int iColumn, CEString& sValue, uint64_t uiHandle)
+        void GetData(int iColumn, CEString& sValue, uint64_t uiHandle)
         {
-            GetData (iColumn, sValue, (sqlite3_stmt *)uiHandle);
+            GetData(iColumn, sValue, (sqlite3_stmt*)uiHandle);
         }
 
-        void GetData (int iColumn, CEString& sValue, sqlite3_stmt * pStmt)
+        void GetData(int iColumn, CEString& sValue, sqlite3_stmt* pStmt)
         {
-            const void * p_ = sqlite3_column_text16 (pStmt, iColumn);
+            const void* p_ = sqlite3_column_text16(pStmt, iColumn);
             if (p_)
             {
-                sValue = static_cast<wchar_t *>(const_cast<void *>(p_));
+#ifdef WIN32
+                sValue = static_cast<wchar_t*>(const_cast<void*>(p_));
+#else
+                auto iByteSize = sqlite3_column_bytes16(pStmt, iColumn);
+                sValue = pToWchar32(p_, iByteSize).get();
+#endif
             }
         }
 
         void Finalize()
         {
-            Finalize (m_pStmt);
+            Finalize(m_pStmt);
         }
 
-        void Finalize (uint64_t uiHandle)
+        void Finalize(uint64_t uiHandle)
         {
-            Finalize ((sqlite3_stmt *)uiHandle);
+            Finalize((sqlite3_stmt*)uiHandle);
         }
 
-        void Finalize (sqlite3_stmt * pStmt)
+        void Finalize(sqlite3_stmt* pStmt)
         {
             if (NULL == m_spDb_)
             {
-                throw CException (-1, L"No DB handle");
+                throw CException(-1, L"No DB handle");
             }
 
             if (NULL == pStmt)
             {
-                throw CException (-1, L"No statement handle");
+                throw CException(-1, L"No statement handle");
             }
 
-            int iRet = sqlite3_finalize (pStmt);
+            int iRet = sqlite3_finalize(pStmt);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_finalize failed");
+                throw CException(iRet, L"sqlite3_finalize failed");
             }
         }
 
         void Exec(const CEString& sQuery)
         {
-//            size_t charsConverted = 0;
+            //            size_t charsConverted = 0;
             int iMaxUtf8SizeInBytes = 2 * sQuery.uiLength() + 1;
 
-            char * pchrUtf8Query = new char[iMaxUtf8SizeInBytes];
+            char* pchrUtf8Query = new char[iMaxUtf8SizeInBytes];
             if (NULL == pchrUtf8Query)
             {
                 throw CException(H_ERROR_POINTER, L"Unable to allocate memory.");
@@ -615,27 +650,27 @@ namespace Hlib
 
         int64_t llGetLastKey()
         {
-            return llGetLastKey (m_pStmt);
+            return llGetLastKey(m_pStmt);
         }
 
-        int64_t llGetLastKey (uint64_t uiHandle)
+        int64_t llGetLastKey(uint64_t uiHandle)
         {
-            return llGetLastKey ((sqlite3_stmt *)uiHandle);
+            return llGetLastKey((sqlite3_stmt*)uiHandle);
         }
 
-        int64_t llGetLastKey (sqlite3_stmt * pStmt)
+        int64_t llGetLastKey(sqlite3_stmt* pStmt)
         {
             if (NULL == m_spDb_)
             {
-                throw CException (-1, L"No DB handle");
+                throw CException(-1, L"No DB handle");
             }
 
             if (NULL == pStmt)
             {
-                throw CException (-1, L"No statement handle");
+                throw CException(-1, L"No statement handle");
             }
 
-            return sqlite3_last_insert_rowid (m_spDb_.get());    
+            return sqlite3_last_insert_rowid(m_spDb_.get());
         }
 
         int iGetLastError()
@@ -645,46 +680,46 @@ namespace Hlib
                 return -1;
             }
 
-            return sqlite3_extended_errcode (m_spDb_.get());
+            return sqlite3_extended_errcode(m_spDb_.get());
         }
 
-        void GetLastError (CEString& sError)
+        void GetLastError(CEString& sError)
         {
             if (NULL == m_spDb_)
             {
-                throw CException (-1, L"No DB handle");
+                throw CException(-1, L"No DB handle");
             }
 
-            wchar_t * szError = (wchar_t *)sqlite3_errmsg16 (m_spDb_.get());
+            wchar_t* szError = (wchar_t*)sqlite3_errmsg16(m_spDb_.get());
             sError = szError;
         }
 
-        bool bTableExists (const CEString& sTable)
+        bool bTableExists(const CEString& sTable)
         {
-            CEString sQuery (L"SELECT name FROM sqlite_master WHERE type='table';");
-            int iRet = sqlite3_prepare16_v2 (m_spDb_.get(), sQuery, -1, &m_pStmt, NULL);
+            CEString sQuery(L"SELECT name FROM sqlite_master WHERE type='table';");
+            int iRet = sqlite3_prepare16_v2(m_spDb_.get(), sQuery, -1, &m_pStmt, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_prepare16_v2 failed");
+                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
             }
 
             do
             {
-                iRet = sqlite3_step (m_pStmt);
+                iRet = sqlite3_step(m_pStmt);
                 if (SQLITE_DONE == iRet)
                 {
-                    iRet = sqlite3_reset (m_pStmt);
+                    iRet = sqlite3_reset(m_pStmt);
                     Finalize();
                     return false;
                 }
 
                 if (SQLITE_ROW != iRet)
                 {
-                    throw CException (iRet, L"sqlite3_step failed");
+                    throw CException(iRet, L"sqlite3_step failed");
                 }
- 
+
                 CEString sCurrent;
-                GetData (0, sCurrent);
+                GetData(0, sCurrent);
                 if (sTable == sCurrent)
                 {
                     Finalize();
@@ -698,57 +733,57 @@ namespace Hlib
 
         }   //  b_TableExists (...)
 
-        bool bTableEmpty (const CEString& sTable)
+        bool bTableEmpty(const CEString& sTable)
         {
-            CEString sQuery (L"SELECT * FROM ");
+            CEString sQuery(L"SELECT * FROM ");
             sQuery += sTable;
             sQuery += L";";
-            int iRet = sqlite3_prepare16_v2 (m_spDb_.get(), sQuery, -1, &m_pStmt, NULL);
+            int iRet = sqlite3_prepare16_v2(m_spDb_.get(), sQuery, -1, &m_pStmt, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_prepare16_v2 failed");
+                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
             }
 
-            iRet = sqlite3_step (m_pStmt);
+            iRet = sqlite3_step(m_pStmt);
             if (SQLITE_DONE == iRet)
             {
-                iRet = sqlite3_reset (m_pStmt);
+                iRet = sqlite3_reset(m_pStmt);
                 return false;
             }
 
             if (SQLITE_ROW != iRet)
             {
-                throw CException (iRet, L"sqlite3_step failed");
+                throw CException(iRet, L"sqlite3_step failed");
             }
 
             return true;
 
         }   //  TableEmpty (...)
 
-        int64_t llRows (const CEString& sTable)
+        int64_t llRows(const CEString& sTable)
         {
-            CEString sQuery (L"SELECT COUNT (*) FROM ");
+            CEString sQuery(L"SELECT COUNT (*) FROM ");
             sQuery += sTable;
             sQuery += L";";
-            int iRet = sqlite3_prepare16_v2 (m_spDb_.get(), sQuery, -1, &m_pStmt, NULL);
+            int iRet = sqlite3_prepare16_v2(m_spDb_.get(), sQuery, -1, &m_pStmt, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_prepare16_v2 failed");
+                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
             }
 
-            iRet = sqlite3_step (m_pStmt);
+            iRet = sqlite3_step(m_pStmt);
             if (SQLITE_DONE == iRet)
             {
-                iRet = sqlite3_reset (m_pStmt);
+                iRet = sqlite3_reset(m_pStmt);
                 return 0;
             }
 
             if (SQLITE_ROW != iRet)
             {
-                throw CException (iRet, L"sqlite3_step failed");
+                throw CException(iRet, L"sqlite3_step failed");
             }
 
-            return sqlite3_column_int64 (m_pStmt, 0);
+            return sqlite3_column_int64(m_pStmt, 0);
 
         }   //  llRows (...)
 
@@ -759,61 +794,61 @@ namespace Hlib
         {
             if (NULL == m_spDb_)
             {
-                throw CException (-1, L"No DB handle");
+                throw CException(-1, L"No DB handle");
             }
 
             auto ioOutStream = fopen(sPath.stl_sToUtf8().c_str(), "w");
             if (!ioOutStream)
             {
-                throw CException (-1, L"Unable to open export file.");
+                throw CException(-1, L"Unable to open export file.");
             }
 
-            vector<CEString>::const_iterator itTable  = vecTables.begin();
+            vector<CEString>::const_iterator itTable = vecTables.begin();
 
             int64_t llRowsToExport = 0;
-            for (itTable = vecTables.begin(); 
-                 itTable != vecTables.end();
-                 ++itTable)
+            for (itTable = vecTables.begin();
+                itTable != vecTables.end();
+                ++itTable)
             {
-                llRowsToExport += llRows (*itTable);
+                llRowsToExport += llRows(*itTable);
             }
-        
+
             if (llRowsToExport < 1)
             {
                 return true;
             }
 
             int64_t llRow = 0;
-        
-            for (vector<CEString>::const_iterator itTable = vecTables.begin(); 
-                 itTable != vecTables.end();
-                 ++itTable)
+
+            for (vector<CEString>::const_iterator itTable = vecTables.begin();
+                itTable != vecTables.end();
+                ++itTable)
             {
-                CEString sQuery (L"SELECT * FROM ");
-    //            str_query += sTable;
+                CEString sQuery(L"SELECT * FROM ");
+                //            str_query += sTable;
                 sQuery += *itTable;
                 sQuery += L";";
 
-                sqlite3_stmt * pStmt = NULL;
-                int iRet = sqlite3_prepare16_v2 (m_spDb_.get(), sQuery, -1, &pStmt, NULL);
+                sqlite3_stmt* pStmt = NULL;
+                int iRet = sqlite3_prepare16_v2(m_spDb_.get(), sQuery, -1, &pStmt, NULL);
                 if (SQLITE_OK != iRet)
                 {
-                    throw CException (iRet, L"sqlite3_prepare16_v2 failed");
+                    throw CException(iRet, L"sqlite3_prepare16_v2 failed");
                 }
 
-                CEString sTableName (*itTable);
+                CEString sTableName(*itTable);
                 sTableName += L"\n";
-                iRet = fputs (sTableName.stl_sToUtf8().c_str(), ioOutStream);
+                iRet = fputs(sTableName.stl_sToUtf8().c_str(), ioOutStream);
                 if (iRet < 0)
                 {
                     ERROR_LOG(L"Error writing export table name. \n");
                 }
 
                 CEString sHeader;
-                int iColumns = sqlite3_column_count (pStmt);
+                int iColumns = sqlite3_column_count(pStmt);
                 for (int iColName = 0; iColName < iColumns; ++iColName)
                 {
-                    sHeader += (wchar_t *)sqlite3_column_name16 (pStmt, iColName);
+                    sHeader += (wchar_t*)sqlite3_column_name16(pStmt, iColName);
                     if (iColName < iColumns - 1)
                     {
                         sHeader += SZ_SEPARATOR;
@@ -821,20 +856,20 @@ namespace Hlib
                 }
                 sHeader += L"\n";
 
-                iRet = fputs (sHeader.stl_sToUtf8().c_str(), ioOutStream);
+                iRet = fputs(sHeader.stl_sToUtf8().c_str(), ioOutStream);
                 if (iRet < 0)
                 {
                     ERROR_LOG(L"Error writing export table header. \n");
                 }
 
                 int iPercentDone = 0;
-                while (bGetRow (pStmt))
+                while (bGetRow(pStmt))
                 {
                     CEString sOut;
                     for (int iCol = 0; iCol < iColumns; ++iCol)
                     {
                         CEString sCol;
-                        GetData (iCol, sCol, pStmt);
+                        GetData(iCol, sCol, pStmt);
                         if (sOut.uiLength() > 0)
                         {
                             sOut += SZ_SEPARATOR;
@@ -844,23 +879,23 @@ namespace Hlib
                     sOut += L"\n";
 
                     iRet = fputs(sOut.stl_sToUtf8().c_str(), ioOutStream);
-                    if (iRet <0)
+                    if (iRet < 0)
                     {
-                        throw CException (iRet, L"Error writing export table.");
+                        throw CException(iRet, L"Error writing export table.");
                     }
-                
-                    int iPd = (int) (((double)llRow/(double)llRowsToExport) * 100);
+
+                    int iPd = (int)(((double)llRow / (double)llRowsToExport) * 100);
                     if (iPd > iPercentDone)
                     {
-                        iPercentDone = min (iPd, 100);
-                        pProgress (iPercentDone, false);
+                        iPercentDone = min(iPd, 100);
+                        pProgress(iPercentDone, false);
                     }
 
                     ++llRow;
 
                 }       //  while (...)
-            
-                iRet = fputs ("\n", ioOutStream);
+
+                iRet = fputs("\n", ioOutStream);
                 if (iRet < 0)
                 {
                     ERROR_LOG(L"Error writing terminating line. \n");
@@ -868,7 +903,7 @@ namespace Hlib
 
             }   //  for (vector<CEString> ...
 
-            fclose (ioOutStream);
+            fclose(ioOutStream);
 
             pProgress(100, false);
 
@@ -883,18 +918,18 @@ namespace Hlib
         {
             if (nullptr == m_spDb_)
             {
-                throw CException (-1, L"No DB handle");
+                throw CException(-1, L"No DB handle");
             }
 
             auto ioInStream = fopen(sPath.stl_sToUtf8().c_str(), "r");
             if (!ioInStream)
             {
-                throw CException (-1, L"Unable to open import file.");
+                throw CException(-1, L"Unable to open import file.");
             }
 
             int iCharsRead = 0;
-//            int iPercentDone = 0;
-    //        int iEntriesRead = 0;
+            //            int iPercentDone = 0;
+                //        int iEntriesRead = 0;
 
             char szLineBuf[10000];
             while (!feof(ioInStream))
@@ -905,10 +940,10 @@ namespace Hlib
                 CEString sTable;
                 while (!feof(ioInStream) && sTable.bIsEmpty())
                 {
-                    char * szRet = fgets(szLineBuf, 10000, ioInStream);
+                    char* szRet = fgets(szLineBuf, 10000, ioInStream);
                     if (nullptr == szRet)
                     {
-                        throw CException (-1, L"Error reading table name.");
+                        throw CException(-1, L"Error reading table name.");
                     }
                     else
                     {
@@ -916,7 +951,7 @@ namespace Hlib
                     }
                 }
 
-                if (feof (ioInStream))
+                if (feof(ioInStream))
                 {
                     continue;
                 }
@@ -924,21 +959,21 @@ namespace Hlib
                 if (sTable.bIsEmpty())
                 {
                     assert(0);
-                    throw CException (-1, L"Empty table name.");
+                    throw CException(-1, L"Empty table name.");
                 }
 
-                sTable.Trim (L"\n ");
+                sTable.Trim(L"\n ");
 
                 //
                 // Get table descriptor
                 //
                 CEString sDescriptor;
-                while (!feof (ioInStream) && sDescriptor.bIsEmpty())
+                while (!feof(ioInStream) && sDescriptor.bIsEmpty())
                 {
-                    char * szLineBuf = fgets(szLineBuf, 10000, ioInStream);
+                    char* szLineBuf = fgets(szLineBuf, 10000, ioInStream);
                     if (nullptr == szLineBuf)
                     {
-                        throw CException (-1, L"Error reading import file header.");
+                        throw CException(-1, L"Error reading import file header.");
                     }
                     else
                     {
@@ -946,9 +981,9 @@ namespace Hlib
                     }
                 }
 
-                sDescriptor.Trim (L"\n ");
+                sDescriptor.Trim(L"\n ");
 
-                if (feof (ioInStream))
+                if (feof(ioInStream))
                 {
                     continue;
                 }
@@ -956,7 +991,7 @@ namespace Hlib
                 if (sDescriptor.bIsEmpty())
                 {
                     assert(0);
-                    throw CException (-1, L"Empty table descriptor.");
+                    throw CException(-1, L"Empty table descriptor.");
                 }
 
                 CEString sSeparators(SZ_SEPARATOR);
@@ -980,26 +1015,26 @@ namespace Hlib
                     }
                 }
 
-                bool bRet = bImport (ioInStream, sTable, iColumns, iCharsRead, bMerge, pProgress);
+                bool bRet = bImport(ioInStream, sTable, iColumns, iCharsRead, bMerge, pProgress);
                 if (!bRet)
                 {
-                    throw CException (-1, L"Table import failed.");
+                    throw CException(-1, L"Table import failed.");
                 }
 
             }   //  while (!feof (ioInstream))
-    
-            fclose (ioInStream);
-        
+
+            fclose(ioInStream);
+
             pProgress(100, false);
 
             return true;
-        
+
         }   //  ImportTables (...)
 
         //
         //  Helpers
         //
-        bool bCreateImportTable (const CEString& sTable, const CEString& sDescriptor, int iColumns)
+        bool bCreateImportTable(const CEString& sTable, const CEString& sDescriptor, int iColumns)
         {
             CEString sSeparators(SZ_SEPARATOR);
             sSeparators += L", \n";
@@ -1009,67 +1044,67 @@ namespace Hlib
 
             if (bTableExists(sTable))
             {
-                CEString sDropStmt (L"DROP TABLE ");
+                CEString sDropStmt(L"DROP TABLE ");
                 sDropStmt += sTable;
 
-                sqlite3_stmt * pStmt = NULL;
-                int iRet = sqlite3_prepare16_v2 (m_spDb_.get(), sDropStmt, -1, &pStmt, NULL);
+                sqlite3_stmt* pStmt = NULL;
+                int iRet = sqlite3_prepare16_v2(m_spDb_.get(), sDropStmt, -1, &pStmt, NULL);
                 if (SQLITE_OK != iRet)
                 {
-                    throw CException (iRet, L"sqlite3_prepare16_v2 failed for drop.");
+                    throw CException(iRet, L"sqlite3_prepare16_v2 failed for drop.");
                 }
 
-                iRet = sqlite3_step (pStmt);
-                if (SQLITE_DONE != iRet) 
+                iRet = sqlite3_step(pStmt);
+                if (SQLITE_DONE != iRet)
                 {
-                    throw CException (iRet, L"sqlite3_step failed for drop.");
+                    throw CException(iRet, L"sqlite3_step failed for drop.");
                 }
 
-                sqlite3_reset (pStmt);
+                sqlite3_reset(pStmt);
             }
-        
-            CEString sCreateStmt (L"CREATE TABLE ");
+
+            CEString sCreateStmt(L"CREATE TABLE ");
             sCreateStmt += sTable;
             sCreateStmt += L" (";
-            sCreateStmt += sHeader.sGetField (0);
+            sCreateStmt += sHeader.sGetField(0);
             sCreateStmt += L" INTEGER PRIMARY KEY ASC";
             for (int iCol = 1; iCol < iColumns; ++iCol)
             {
                 sCreateStmt += L", ";
-                sCreateStmt += sHeader.sGetField (iCol);
+                sCreateStmt += sHeader.sGetField(iCol);
                 sCreateStmt += L" TEXT";
             }
             sCreateStmt += L");";
 
-            sqlite3_stmt * pStmt = NULL;
-            int iRet = sqlite3_prepare16_v2 (m_spDb_.get(), sCreateStmt, -1, &pStmt, NULL);
+            sqlite3_stmt* pStmt = NULL;
+            int iRet = sqlite3_prepare16_v2(m_spDb_.get(), sCreateStmt, -1, &pStmt, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_prepare16_v2 failed for create.");
+                throw CException(iRet, L"sqlite3_prepare16_v2 failed for create.");
             }
 
-            iRet = sqlite3_step (pStmt);
-            if (SQLITE_DONE != iRet) 
+            iRet = sqlite3_step(pStmt);
+            if (SQLITE_DONE != iRet)
             {
-                throw CException (iRet, L"sqlite3_step failed for create.");
+                throw CException(iRet, L"sqlite3_step failed for create.");
             }
 
-            iRet = sqlite3_finalize (pStmt);
+            iRet = sqlite3_finalize(pStmt);
             if (SQLITE_OK != iRet)
             {
-                throw CException (iRet, L"sqlite3_finalize failed for create.");
+                throw CException(iRet, L"sqlite3_finalize failed for create.");
             }
 
             return true;
-    
+
         }   //  b_CreateImportTable (...)
 
-        bool bImport (FILE * ioInstream, 
-                      const CEString& sTable, 
-                      int iColumns,
-                      int iCharsRead,
-                      bool bAutoincrement,
-                      PROGRESS_CALLBACK_CLR pProgress)
+        bool bImport(FILE* ioInstream,
+            const CEString& sTable,
+            int iColumns,
+            int iCharsRead,
+            bool bAutoincrement,
+            PROGRESS_CALLBACK_CLR pProgress)
         {
             struct stat stStatBuf;
             auto iRet = fstat(fileno(ioInstream), &stStatBuf);
@@ -1086,7 +1121,7 @@ namespace Hlib
 
             if (bAutoincrement)
             {
-//                sStmt += L"(SELECT last_insert_rowid())";
+                //                sStmt += L"(SELECT last_insert_rowid())";
                 sStmt += L"NULL";
                 for (int iCol = 1; iCol < iColumns; ++iCol)
                 {
@@ -1111,11 +1146,11 @@ namespace Hlib
                 sStmt += L")";
             }
 
-            sqlite3_stmt * pStmt = NULL;
+            sqlite3_stmt* pStmt = NULL;
 
             BeginTransaction();
-       
-            CEString sSeparators (SZ_SEPARATOR);
+
+            CEString sSeparators(SZ_SEPARATOR);
             sSeparators += L", \n";
             int iEntriesRead = 0;
 
@@ -1123,24 +1158,24 @@ namespace Hlib
             CEString sLine;
             sLine.ResetSeparators();
             sLine.SetBreakChars(sSeparators);
-            for (; !feof (ioInstream); ++iEntriesRead)
+            for (; !feof(ioInstream); ++iEntriesRead)
             {
-                int iRet = sqlite3_prepare16_v2 (m_spDb_.get(), sStmt, -1, &pStmt, NULL);
+                int iRet = sqlite3_prepare16_v2(m_spDb_.get(), sStmt, -1, &pStmt, NULL);
                 if (SQLITE_OK != iRet)
                 {
-                    throw CException (iRet, L"sqlite3_prepare16_v2 failed");
+                    throw CException(iRet, L"sqlite3_prepare16_v2 failed");
                 }
 
-                char * szRet = fgets (szLineBuf, 10000, ioInstream);
+                char* szRet = fgets(szLineBuf, 10000, ioInstream);
                 if (nullptr == szRet)
                 {
-                    throw CException (-1, L"Error reading table name.");
+                    throw CException(-1, L"Error reading table name.");
                 }
                 else
                 {
                     sLine = CEString::sFromUtf8(szLineBuf);
                 }
-                sLine.Trim (sSeparators);
+                sLine.Trim(sSeparators);
                 if (sLine.bIsEmpty())
                 {
                     break;
@@ -1151,11 +1186,11 @@ namespace Hlib
                 if ((int)sLine.uiNFields() != iColumns)
                 {
                     CEString sMsg(L"Number of fields does not match number of columns: ");
-                    sMsg += sLine;                    
+                    sMsg += sLine;
                     sMsg += L"\n";
-                    wchar_t * szMsg = sMsg;
+                    wchar_t* szMsg = sMsg;
                     ERROR_LOG(szMsg);
-//                    throw CException (-1, L"Number of fields does not match number of columns.");
+                    //                    throw CException (-1, L"Number of fields does not match number of columns.");
                     continue;
                 }
 
@@ -1164,9 +1199,9 @@ namespace Hlib
                     wstring wstrColumn(sLine.sGetField(0));
                     int64_t llId = stoll(wstrColumn.c_str());
                     Bind(1, llId, pStmt);
-                    for (int iCol = 2; iCol < iColumns+1; ++iCol)
+                    for (int iCol = 2; iCol < iColumns + 1; ++iCol)
                     {
-                        Bind(iCol, sLine.sGetField(iCol-1), pStmt);
+                        Bind(iCol, sLine.sGetField(iCol - 1), pStmt);
                     }
                 }
                 else
@@ -1176,15 +1211,15 @@ namespace Hlib
                         Bind(iCol, sLine.sGetField(iCol), pStmt);
                     }
                 }
-            
-                InsertRow (pStmt);
-                Finalize (pStmt);
 
-                int iPd = (int) (((double)iCharsRead/(double)lFileLength) * 100);
+                InsertRow(pStmt);
+                Finalize(pStmt);
+
+                int iPd = (int)(((double)iCharsRead / (double)lFileLength) * 100);
                 if (iPd > iPercentDone)
                 {
-                    iPercentDone = min (iPd, 100);
-                    pProgress (iPercentDone, false);
+                    iPercentDone = min(iPd, 100);
+                    pProgress(iPercentDone, false);
                 }
 
             }   //  for (; !feof (ioInstream); ++iEntriesRead)
@@ -1202,13 +1237,13 @@ namespace Hlib
             Exec(sQuery);
         }
 
-        int iLastID (const CEString& sTableName)     // returns the ID of the last entry in the table
+        int iLastID(const CEString& sTableName)     // returns the ID of the last entry in the table
         {
             int iLastId = 0;
-            CEString sQuery = L"SELECT * FROM " + sTableName 
-                + L" AS a0 WHERE NOT EXIST (SELECT * FROM " + sTableName 
+            CEString sQuery = L"SELECT * FROM " + sTableName
+                + L" AS a0 WHERE NOT EXIST (SELECT * FROM " + sTableName
                 + L" AS a1 WHERE a1.id > a0.id)";
-            PrepareForSelect (sQuery);
+            PrepareForSelect(sQuery);
             if (bGetRow())
             {
                 GetData(0, iLastId);
@@ -1217,11 +1252,11 @@ namespace Hlib
             {
                 iLastId = -1;
             }
-        
+
             Finalize();
-        
+
             return iLastId;
-    
+
         }   // iLastID (...)
 
     };  //  class CSqlite
