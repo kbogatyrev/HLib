@@ -188,7 +188,7 @@ namespace Hlib
             return (uint64_t)pStmt;
         }
 
-        void PrepareForUpdate(const CEString& sTable, const vector<CEString>& vecColumns, wchar_t llPrimaryKey)
+        void PrepareForUpdate(const CEString& sTable, const vector<CEString>& vecColumns, int64_t llPrimaryKey)
         {
             uiPrepareForUpdate(sTable, vecColumns, llPrimaryKey, m_pStmt);
         }
@@ -631,7 +631,7 @@ namespace Hlib
                 throw CException(H_ERROR_POINTER, L"Unable to allocate memory.");
             }
 
-            int errorCode = wcstombs(pchrUtf8Query, sQuery, sQuery.uiLength());
+            auto errorCode = wcstombs(pchrUtf8Query, sQuery, sQuery.uiLength());
             if (errorCode != 0)
             {
                 throw CException(H_ERROR_POINTER, L"UTF-16 to UTF-8 conversion error or bad query string.");

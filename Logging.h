@@ -177,7 +177,7 @@ private:
         mbstate_t state = mbstate_t();
         auto pSource = sSource.c_str();
         size_t len = 1 + mbsrtowcs(nullptr, &pSource, 0, &state);
-        auto pWchr = make_unique<wchar_t>(len);
+        auto pWchr = make_unique<wchar_t[]>(len);
         mbsrtowcs(pWchr.get(), &pSource, len, &state);
         return wstring(pWchr.get());
     }

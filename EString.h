@@ -2519,7 +2519,7 @@ public:
     static string stl_sToUtf8(const wchar_t * szSource)
     {
         wchar_t arrSource[cuiMaxSize_ + 1];
-        unsigned int uiLength = wcslen(szSource);
+        auto uiLength = (unsigned int)wcslen(szSource);
         int iLength = (int)min(uiLength, cuiMaxSize_);
         wmemmove(arrSource, szSource, iLength+1);
         wstring_convert<codecvt_utf8<wchar_t>> converter;
