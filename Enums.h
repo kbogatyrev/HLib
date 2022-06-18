@@ -458,7 +458,7 @@ namespace Hlib
 
     enum ET_Place
     {
-        PLACE_UNDIFINED,
+        PLACE_UNDEFINED,
         PLACE_BILABIAL,
         PLACE_LABIODENTAL,
         PLACE_DENTAL,
