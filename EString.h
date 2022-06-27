@@ -1457,7 +1457,7 @@ public:
 
         if (uiStartPos + uiHowMany > m_uiLength)
         {
-            assert(0);
+//            assert(0);
             ERROR_LOG(L"*** Warning: attempt to replace beyond string end.");
             uiHowMany = m_uiLength - uiStartPos;
         }
@@ -2364,7 +2364,7 @@ public:
     {
         if (m_Vowels.uiLength() == 0)
         {
-            assert(0);
+//            assert(0);
             const wchar_t * szMsg = L"Vowels not defined";
             ERROR_LOG(szMsg);
             throw CException (H_ERROR_GENERAL, szMsg);
@@ -2388,7 +2388,7 @@ public:
             ++uiAt;
         }
 
-        assert(0);
+//        assert(0);
         const wchar_t * szMsg = L"Vowel position not found";
         ERROR_LOG(szMsg);
         throw CException (H_ERROR_GENERAL, szMsg);
@@ -2401,7 +2401,7 @@ public:
     {
         if (m_Vowels.uiLength() == 0)
         {
-            assert(0);
+//            assert(0);
             const wchar_t * szMsg = L"Vowels not defined";
             ERROR_LOG(szMsg);
             throw CException (H_ERROR_GENERAL, szMsg);
@@ -2409,7 +2409,7 @@ public:
 
         if (m_uiLength <= uiAbsPos)
         {
-            assert(0);
+//            assert(0);
             const wchar_t * szMsg = L"Vowel position invalid";
             ERROR_LOG(szMsg);
             throw CException (H_ERROR_INVALID_ARG, szMsg);
@@ -2433,7 +2433,7 @@ public:
 
                 if (++uiVowelPos > uiAbsPos)
                 {
-                    assert(0);
+//                    assert(0);
                     const wchar_t * szMsg = L"Vowel position not found";
                     ERROR_LOG(szMsg);
                     throw CException (H_ERROR_GENERAL, szMsg);
@@ -2443,7 +2443,7 @@ public:
 
         } while (uiVowelPos < m_uiLength);
 
-        assert(0);
+//        assert(0);
         const wchar_t * szMsg = L"Vowel position not found";
         ERROR_LOG(szMsg);
         throw CException (H_ERROR_GENERAL, szMsg);
