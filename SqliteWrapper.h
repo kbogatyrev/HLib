@@ -175,7 +175,11 @@ namespace Hlib
             }
             sStmt += L")";
 
+#ifdef WIN32
             int iRet = sqlite3_prepare16_v2(m_spDb_.get(), sStmt, -1, &pStmt, NULL);
+#else
+            int iRet = sqlite3_prepare16_v2(m_spDb_.get(), pToWchar16(sStmt).get(), -1, &pStmt, NULL);
+#endif
             if (SQLITE_OK != iRet)
             {
                 CEString sErrTxt;
@@ -374,7 +378,11 @@ namespace Hlib
 
         void Bind(int iColumn, const CEString& sValue, sqlite3_stmt* pStmt)
         {
+#ifdef WIN32
             int iRet = sqlite3_bind_text16(pStmt, iColumn, (wchar_t*)sValue, -1, SQLITE_STATIC);
+#else
+            int iRet = sqlite3_bind_text16(pStmt, iColumn, pToWchar16(sValue).get(), -1, SQLITE_STATIC);
+#endif
             if (SQLITE_OK != iRet)
             {
                 throw CException(iRet, L"sqlite3_bind_text16 failed");
