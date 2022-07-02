@@ -329,6 +329,7 @@ namespace Hlib
         FIRST_PRETONIC,
         OTHER_PRETONIC,
         POSTTONIC,
+        UNSTRESSED,
         VOWEL_STRESS_RELATION_COUNT
     };
 
