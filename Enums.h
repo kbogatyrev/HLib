@@ -562,6 +562,7 @@ namespace Hlib
         WORD_STRESS_TYPE_AUTONOMOUS,
         WORD_STRESS_TYPE_PROCLITIC,
         WORD_STRESS_TYPE_ENCLITIC,
+        WORD_STRESS_TYPE_CLITIC,
         WORD_STRESS_TYPE_COUNT
 
     };  //  ET_WordStressType
