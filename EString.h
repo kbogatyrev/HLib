@@ -511,8 +511,6 @@ public:
             return *this;
         }
 
-//        m_uiBlocksAllocated = sRhs.m_uiBlocksAllocated;
-//        m_uiLength = sRhs.m_uiLength;
         Assign (sRhs.m_szData.get(), sRhs.m_uiLength);
         
         return *this;
