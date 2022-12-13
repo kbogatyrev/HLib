@@ -640,7 +640,7 @@ namespace Hlib
             }
 
             auto errorCode = wcstombs(pchrUtf8Query, sQuery, sQuery.uiLength());
-            if (errorCode != 0)
+            if (errorCode < 0)
             {
                 throw CException(H_ERROR_POINTER, L"UTF-16 to UTF-8 conversion error or bad query string.");
             }
@@ -939,7 +939,7 @@ namespace Hlib
             //            int iPercentDone = 0;
                 //        int iEntriesRead = 0;
 
-            char szLineBuf[10000];
+            char szLineBuf[10000] { 0 };
             while (!feof(ioInStream))
             {
                 //
@@ -975,11 +975,12 @@ namespace Hlib
                 //
                 // Get table descriptor
                 //
+                //char szLineBuf[10000]{ 0 };
                 CEString sDescriptor;
                 while (!feof(ioInStream) && sDescriptor.bIsEmpty())
                 {
-                    char* szLineBuf = fgets(szLineBuf, 10000, ioInStream);
-                    if (nullptr == szLineBuf)
+                    char * szRet = fgets(szLineBuf, 10000, ioInStream);
+                    if (nullptr == szRet)
                     {
                         throw CException(-1, L"Error reading import file header.");
                     }
