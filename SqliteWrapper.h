@@ -1116,7 +1116,7 @@ namespace Hlib
             PROGRESS_CALLBACK_CLR pProgress)
         {
             struct stat stStatBuf;
-            auto iRet = fstat(fileno(ioInstream), &stStatBuf);
+            auto iRet = fstat(_fileno(ioInstream), &stStatBuf);
             if (iRet != 0)
             {
                 throw CException(iRet, L"Unable to stat import table file.");
