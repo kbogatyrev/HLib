@@ -630,7 +630,6 @@ namespace Hlib
 
         void Exec(const CEString& sQuery)
         {
-            //            size_t charsConverted = 0;
             int iMaxUtf8SizeInBytes = 2 * sQuery.uiLength() + 1;
 
             char* pchrUtf8Query = new char[iMaxUtf8SizeInBytes];
@@ -639,11 +638,13 @@ namespace Hlib
                 throw CException(H_ERROR_POINTER, L"Unable to allocate memory.");
             }
 
-            auto errorCode = wcstombs(pchrUtf8Query, sQuery, sQuery.uiLength());
-            if (errorCode < 0)
+            auto length = wcstombs(pchrUtf8Query, sQuery, sQuery.uiLength());
+            if (length < 0)
             {
                 throw CException(H_ERROR_POINTER, L"UTF-16 to UTF-8 conversion error or bad query string.");
             }
+
+            pchrUtf8Query[length] = '\0';
 
             int iRet = sqlite3_exec(m_spDb_.get(), pchrUtf8Query, NULL, NULL, NULL);
             if (SQLITE_OK != iRet)
