@@ -639,7 +639,7 @@ namespace Hlib
             }
 
             auto length = wcstombs(pchrUtf8Query, sQuery, sQuery.uiLength());
-            if (length < 0)
+            if ((size_t)-1 == length)   // -1 cast to (size_t) per documentation
             {
                 throw CException(H_ERROR_POINTER, L"UTF-16 to UTF-8 conversion error or bad query string.");
             }
@@ -1117,7 +1117,7 @@ namespace Hlib
             PROGRESS_CALLBACK_CLR pProgress)
         {
             struct stat stStatBuf;
-            auto iRet = fstat(_fileno(ioInstream), &stStatBuf);
+            auto iRet = fstat(fileno(ioInstream), &stStatBuf);
             if (iRet != 0)
             {
                 throw CException(iRet, L"Unable to stat import table file.");

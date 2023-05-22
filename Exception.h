@@ -28,7 +28,7 @@ public:
 
     CException (int iErrorCode, const wchar_t * szDescription) : m_iErrorCode (iErrorCode)
     {
-        auto iLength = std::min<const unsigned int> ((const unsigned int)wcslen (szDescription), cuiMaxTextLength);
+        auto iLength = std::min<size_t> (wcslen (szDescription), (size_t)cuiMaxTextLength);
         wmemmove (m_arrDescription, szDescription, iLength);                
         m_arrDescription[iLength] = L'\0';
     }
