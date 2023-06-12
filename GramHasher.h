@@ -167,7 +167,7 @@ namespace Hlib
 
     static CEString sGenderToStr(ET_Gender eKey)
     {
-        static const map<ET_Gender, CEString> mapGenderToStr = { { GENDER_M, L"M" }, { GENDER_F, L"F" }, { GENDER_N, L"N" } };
+        static const map<ET_Gender, CEString> mapGenderToStr = { { GENDER_M, L"M" }, { GENDER_F, L"F" }, { GENDER_N, L"N" }, { GENDER_UNDEFINED, L"" } };
 
         CEString sGender;
         try
