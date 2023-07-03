@@ -89,7 +89,13 @@ namespace Hlib
             iRet = sqlite3_exec(m_spDb_.get(), "BEGIN TRANSACTION", NULL, NULL, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException(iRet, L"sqlite3_exec failed for transaction start");
+                CEString sErrTxt;
+                GetLastError(sErrTxt);
+                CEString sMsg(L"sqlite3_exec failed: ");
+                sMsg += sErrTxt;
+                throw CException(iRet, sMsg);
+//
+//                throw CException(iRet, L"sqlite3_exec failed for transaction start");
             }
         }
 
