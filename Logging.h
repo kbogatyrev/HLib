@@ -5,7 +5,10 @@
 #define LOGGING_H_INCLUDED
 
 #include <ios>
-#include <io.h>
+#ifdef WIN32
+    #include <io.h>
+#else
+#endif
 #include <fcntl.h>
 #include <codecvt>
 #include <locale>
@@ -64,9 +67,11 @@ namespace Hlib
 
         void LogWstr(const char* pchrPath, const char* pchrFunction, unsigned int uiLine, const wchar_t* pwMsg)
         {
+#ifdef WIN32
             _setmode(_fileno(stdout), _O_U16TEXT);
-            string sLocation = string(pchrPath) + string("\t") + to_string(uiLine) + string("\t") + string(pchrFunction) + string("\t");
-            auto wsOut = wsFormat(pwMsg, wsToWstring(sLocation.c_str()).c_str());
+#endif
+            wstring wsLocation = wsToWstring(string(pchrPath)) + wstring(L"\t") + to_wstring(uiLine) + wstring(L"\t") + wsToWstring(string(pchrFunction)) + wstring(L"\t");
+            auto wsOut = wsFormat(pwMsg, wsLocation.c_str());
             m_vecLog.push_back(wsOut);
             wcout << wsOut << endl;
         }
@@ -201,7 +206,7 @@ namespace Hlib
 #define ASSERT(bBoolExpr__) if (!(bBoolExpr__)) {\
     {\
     CLogger * pErrorHandler__ = CLogger::pGetInstance(); \
-        pErrorHandler__->LogWstr(__FILE__, __FUNCTION__, __LINE__, L"Assertion failed."); \
+        pErrorHandler__->LogUtf8(__FILE__, __FUNCTION__, __LINE__, L"Assertion failed."); \
     } \
 }
 
