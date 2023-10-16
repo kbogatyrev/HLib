@@ -110,9 +110,14 @@ namespace Hlib
             iRet = sqlite3_exec(m_spDb_.get(), "END TRANSACTION", NULL, NULL, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException(iRet, L"sqlite3_exec failed for transaction end");
+                CEString sErrTxt;
+                GetLastError(sErrTxt);
+                CEString sMsg(L"sqlite3_exec failed: ");
+                sMsg += sErrTxt;
+                throw CException(iRet, sMsg);
+                //
+                //                throw CException(iRet, L"sqlite3_exec failed for transaction end");
             }
-
         }
 
         void RollbackTransaction()
