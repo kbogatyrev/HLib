@@ -194,18 +194,18 @@ namespace Hlib
     };      //  CLogger
 
 #define MESSAGE_LOG(sMsg__) {\
-    CLogger * pErrorHandler__ = CLogger::pGetInstance(); \
+    Hlib::CLogger * pErrorHandler__ = Hlib::CLogger::pGetInstance(); \
         pErrorHandler__->LogWstr(__FILE__, __FUNCTION__, __LINE__, sMsg__); \
 }
 
 #define ERROR_LOG(sMsg__) {\
-    CLogger * pErrorHandler__ = CLogger::pGetInstance(); \
+    Hlib::CLogger * pErrorHandler__ = Hlib::CLogger::pGetInstance(); \
         pErrorHandler__->LogWstr(__FILE__, __FUNCTION__, __LINE__, sMsg__); \
 }
 
 #define ASSERT(bBoolExpr__) if (!(bBoolExpr__)) {\
     {\
-    CLogger * pErrorHandler__ = CLogger::pGetInstance(); \
+    Hlib::CLogger * pErrorHandler__ = Hlib::CLogger::pGetInstance(); \
         pErrorHandler__->LogUtf8(__FILE__, __FUNCTION__, __LINE__, L"Assertion failed."); \
     } \
 }
