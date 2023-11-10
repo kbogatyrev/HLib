@@ -1,7 +1,6 @@
 #ifndef H_SQLITE_WRAPPER
 #define H_SQLITE_WRAPPER
 
-//#include <io.h>
 #include <memory>
 #include <string>
 #include <sys/stat.h>
