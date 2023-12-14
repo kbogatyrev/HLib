@@ -2895,6 +2895,8 @@ private:
 
         m_szData[uiSourceLength] = L'\0';
         m_uiLength = uiSourceLength;
+
+        m_bInvalid = true;
     
     }   //  Assign (...)
 
