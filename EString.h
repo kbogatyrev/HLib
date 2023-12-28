@@ -162,6 +162,11 @@ public:
         Set (S.m_szVolatile.get());
     }
 
+    CSeparators(CSeparators&& S) : m_szVolatile(nullptr), m_bDisabled(false)
+    {
+        m_szVolatile = std::move(S.m_szVolatile);
+    }
+
     ~CSeparators()
     {
 //        if (m_szVolatile)
@@ -169,6 +174,22 @@ public:
 //            delete[] m_szVolatile;
 //            m_szVolatile = nullptr;
 //        }
+    }
+
+    CSeparators& operator=(const CSeparators& S)
+    {
+        m_szVolatile = nullptr;
+        m_bDisabled = false;
+        Set(S.m_szVolatile.get());
+        return *this;
+    }
+
+    CSeparators& operator=(CSeparators&& S)
+    {
+        m_szVolatile = nullptr;
+        m_bDisabled = false;
+        m_szVolatile = std::move(S.m_szVolatile);
+        return *this;
     }
 
     void Set (const wchar_t * szSeparators)
@@ -369,6 +390,7 @@ public:
     }
 */
 
+    // Copy ctor
     CEString (const CEString& Source) : 
         m_szData (NULL), 
         m_uiLength (Source.m_uiLength), 
@@ -407,7 +429,28 @@ public:
     
     }   //  Copy ctor
 
-    CEString (const wchar_t * szSource, 
+    // Move ctor
+    CEString(CEString&& Source) :
+        m_szData(std::move(Source.m_szData)),
+        m_uiLength(Source.m_uiLength),
+        m_uiBlocksAllocated(Source.m_uiBlocksAllocated),
+        m_Breaks(std::move(Source.m_Breaks)),
+        m_Tabs(Source.m_Tabs),
+        m_Punctuation(std::move(Source.m_Punctuation)),
+        m_Escape(std::move(Source.m_Escape)),
+        m_Vowels(std::move(Source.m_Vowels)),
+        m_bInvalid(Source.m_bInvalid)
+    {
+        Source.m_szData = nullptr;
+        if (!m_bInvalid)
+        {
+            m_vecTokens = std::move(Source.m_vecTokens);
+        }
+        m_vecRegexMatches = std::move(Source.m_vecRegexMatches);
+
+    }   //  Move ctor
+
+    CEString (const wchar_t * szSource,
               const wchar_t * szBreaks = NULL, 
               const wchar_t * szTabs = NULL, 
               const wchar_t * szPunctuation = NULL,
@@ -515,6 +558,26 @@ public:
         
         return *this;
     
+    }   //  operator= 
+
+    CEString& operator= (CEString&& sRhs)
+    {
+        m_szData = std::move(sRhs.m_szData);
+        m_uiLength = std::move(sRhs.m_uiLength);
+        m_uiBlocksAllocated = std::move(sRhs.m_uiBlocksAllocated);
+        m_Breaks = std::move(sRhs.m_Breaks);
+        m_Tabs = std::move(sRhs.m_Tabs);
+        m_Punctuation = std::move(sRhs.m_Punctuation);
+        m_Escape = std::move(sRhs.m_Escape);
+        m_Vowels = std::move(sRhs.m_Vowels);
+        m_bInvalid = std::move(sRhs.m_bInvalid);
+
+        sRhs.m_szData = nullptr;
+        m_vecTokens = std::move(sRhs.m_vecTokens);
+        m_vecRegexMatches = std::move(sRhs.m_vecRegexMatches);
+
+        return *this;
+
     }   //  operator= 
 
     CEString& operator+= (const wchar_t * szRhs)
