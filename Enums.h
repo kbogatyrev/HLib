@@ -577,6 +577,21 @@ namespace Hlib
         RULE_STRENGTH_COUNT
     };
 
+    enum ET_TextMetadata
+    {
+        TEXT_METADATA_UNDEFINED,
+        TEXT_METADATA_AUTHOR, 
+        TEXT_METADATA_BOOK, 
+        TEXT_METADATA_PAGE,
+        TEXT_METADATA_TITLE,
+        TEXT_METADATA_CHAPTER,
+        TEXT_METADATA_FOOTNOTE_REF,
+        TEXT_METADATA_FOOTNOTE_TEXT,
+        TEXT_METADATA_DATE,
+        TEXT_METADATA_DEDICATION,
+        TEXT_METADATA_COUNT
+    };
+
     [[maybe_unused]]static void operator++ (ET_MainSymbol& eo_ms) 
     {
         eo_ms = (ET_MainSymbol)(eo_ms + 1);
