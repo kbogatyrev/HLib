@@ -1049,7 +1049,7 @@ int main()
         CEString sConvert = L"abcdefg";
         try
         {
-            int i_ = CEString::iToInt(sConvert);
+            [[maybe_unused]]int i_ = CEString::iToInt(sConvert);
             bErrors = true;
             ERROR_LOG(L"Expected EString --> int exception not thrown.")
         }
@@ -1066,7 +1066,7 @@ int main()
     CEString sConvert(L"999999999999999999");
     try
     {
-        int i_ = CEString::iToInt(sConvert);
+        [[maybe_unused]]int i_ = CEString::iToInt(sConvert);
         bErrors = true;
         ERROR_LOG(L"Expected EString --> int exception not thrown.")
     }
