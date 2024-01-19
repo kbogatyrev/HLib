@@ -2520,6 +2520,26 @@ public:
         return CEString(wstrValue.c_str());
     }
 
+    static int iToInt(const CEString& sSource)
+    {
+        wstring wSource(sSource);
+
+        try
+        {
+            int i_ = stoi(wSource);
+            return i_;
+        }
+        catch (std::invalid_argument&)
+        {
+            throw CException(H_ERROR_INVALID_ARG, L"Unable to convert string to integer.");
+        }
+        catch (std::out_of_range&)
+        {
+            throw CException(H_ERROR_INVALID_ARG, L"Integer value out of range.");
+        }
+        return -1;
+    }
+
 //    template<typename fake>
 //    static CEString sToString (int64_t llSource)
 //    {

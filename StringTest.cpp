@@ -1036,6 +1036,50 @@ int main()
     }
 
     {
+        CEString sConvert(L"12345");
+        int i_ = CEString::iToInt(sConvert);
+        if (i_ != 12345)
+        {
+            bErrors = true;
+            ERROR_LOG(L"EString --> int conversion error");
+        }
+    }
+
+    {
+        CEString sConvert = L"abcdefg";
+        try
+        {
+            int i_ = CEString::iToInt(sConvert);
+            bErrors = true;
+            ERROR_LOG(L"Expected EString --> int exception not thrown.")
+        }
+        catch (CException& e)
+        {
+            if (e.iGetErrorCode() != H_ERROR_INVALID_ARG)
+            {
+                bErrors = true;
+                ERROR_LOG(L"Expected EString --> int exception not thrown.");
+            }
+        }
+    }
+
+    CEString sConvert(L"999999999999999999");
+    try
+    {
+        int i_ = CEString::iToInt(sConvert);
+        bErrors = true;
+        ERROR_LOG(L"Expected EString --> int exception not thrown.")
+    }
+    catch (CException& e)
+    {
+        if (e.iGetErrorCode() != H_ERROR_INVALID_ARG)
+        {
+            bErrors = true;
+            ERROR_LOG(L"Expected EString --> int exception not thrown.");
+        }
+    }
+
+    {
         CEString sRangeLoopTest(L"0123456789");
         wstring s_;
         for (auto c_ : sRangeLoopTest)
