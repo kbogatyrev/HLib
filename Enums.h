@@ -386,7 +386,7 @@ namespace Hlib
     enum ET_Sound
     {
         SOUND_UNDEFINED,
-        STRESSED_A,
+        STRESSED_A,                         // 1
         STRESSED_O,
         STRESSED_E,
         I,
@@ -395,7 +395,7 @@ namespace Hlib
         PRETONIC_A,
         PRETONIC_LONG_A,
         PRETONIC_E,         // экран, поэтесса ($36, $45)
-        PRETONIC_HARD_IE,
+        PRETONIC_HARD_IE,                   // 10
         PRETONIC_SOFT_IE,
         SCHWA,
         UNSTRESSED_FRONT_VOWEL,
@@ -405,7 +405,7 @@ namespace Hlib
         P_SOFT,
         B_HARD,
         B_SOFT,
-        M_HARD,
+        M_HARD,                             // 20
         M_SOFT,
         F_HARD,
         F_SOFT,
@@ -415,7 +415,7 @@ namespace Hlib
         N_SOFT,
         T_HARD,
         T_SOFT,
-        D_HARD,
+        D_HARD,                             // 30
         D_SOFT,
         TS_HARD,
         TS_SOFT,    // Цюрих, хуацяо
@@ -425,7 +425,7 @@ namespace Hlib
         Z_HARD,
         Z_SOFT,
         L_HARD,
-        L_SOFT,
+        L_SOFT,                             // 40
         R_HARD,
         R_SOFT,
         SH_HARD,
@@ -435,7 +435,7 @@ namespace Hlib
         JOD,
         K_HARD,
         K_SOFT,
-        G_HARD,
+        G_HARD,                             // 50
         G_SOFT,
         X_HARD,
         X_SOFT,
