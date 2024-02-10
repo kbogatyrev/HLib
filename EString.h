@@ -64,6 +64,7 @@ struct StToken
         eType = ecTokenTypeFront;
         uiOffset = 0;
         uiLength = 0;
+        uiPosition = 0;
     }
 
     virtual ~StToken() {};
