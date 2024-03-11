@@ -124,7 +124,7 @@ struct StTabs
 struct StPunctuation
 {
     const wchar_t * m_szDefault;
-    StPunctuation() : m_szDefault (L".,;:/?<>[]{}~!()-_\'\"\\…") {}
+    StPunctuation() : m_szDefault (L".,;:/?<>[]{}~!()-—_\'\"\\…") {}
 };
 
 struct StEscape
@@ -566,16 +566,16 @@ public:
         m_szData = std::move(sRhs.m_szData);
         m_uiLength = std::move(sRhs.m_uiLength);
         m_uiBlocksAllocated = std::move(sRhs.m_uiBlocksAllocated);
-//        m_Breaks = std::move(sRhs.m_Breaks);
-//        m_Tabs = std::move(sRhs.m_Tabs);
-//        m_Punctuation = std::move(sRhs.m_Punctuation);
-//        m_Escape = std::move(sRhs.m_Escape);
-//        m_Vowels = std::move(sRhs.m_Vowels);
-//        m_bInvalid = std::move(sRhs.m_bInvalid);
+        m_Breaks = std::move(sRhs.m_Breaks);
+        m_Tabs = std::move(sRhs.m_Tabs);
+        m_Punctuation = std::move(sRhs.m_Punctuation);
+        m_Escape = std::move(sRhs.m_Escape);
+        m_Vowels = std::move(sRhs.m_Vowels);
+        m_bInvalid = std::move(sRhs.m_bInvalid);
 
         sRhs.m_szData = nullptr;
-//        m_vecTokens = std::move(sRhs.m_vecTokens);
-//        m_vecRegexMatches = std::move(sRhs.m_vecRegexMatches);
+        m_vecTokens = std::move(sRhs.m_vecTokens);
+        m_vecRegexMatches = std::move(sRhs.m_vecRegexMatches);
 
         return *this;
 
