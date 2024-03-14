@@ -1176,8 +1176,8 @@ namespace Hlib
 
             char szLineBuf[10000];
             CEString sLine;
-            sLine.ResetSeparators();
-            sLine.SetBreakChars(sSeparators);
+//            sLine.ResetSeparators();
+//            sLine.SetBreakChars(sSeparators);
             for (; !feof(ioInstream); ++iEntriesRead)
             {
                 int iRet = sqlite3_prepare16_v2(m_spDb_.get(), sStmt, -1, &pStmt, NULL);
@@ -1195,6 +1195,8 @@ namespace Hlib
                 {
                     sLine = CEString::sFromUtf8(szLineBuf);
                 }
+                sLine.ResetSeparators();
+                sLine.SetBreakChars(sSeparators);
                 sLine.Trim(sSeparators);
                 if (sLine.bIsEmpty())
                 {
