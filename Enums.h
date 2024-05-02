@@ -63,11 +63,12 @@ namespace Hlib
         MS_N,
         MS_PREDL,
         MS_SOJUZ,
-        MS_PREDIK,
+        MS_PREDIC,
         MS_VVODN,
         MS_SRAVN,
         MS_CHAST,
         MS_MEZHD,
+        MS_PREDIC_MS,
         MS_END,
         MS_UNDEFINED
     };
