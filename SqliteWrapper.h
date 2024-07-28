@@ -711,6 +711,10 @@ namespace Hlib
 
             wchar_t* szError = (wchar_t*)sqlite3_errmsg16(m_spDb_.get());
             sError = szError;
+            auto szErrorUtf8 = sqlite3_errmsg(m_spDb_.get());
+            CEString sMsg{ L"Error writing export table name." };
+            sMsg += CEString::sFromUtf8(szErrorUtf8);
+            ERROR_LOG(sMsg);
         }
 
         bool bTableExists(const CEString& sTable)
