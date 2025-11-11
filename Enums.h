@@ -69,6 +69,7 @@ namespace Hlib
         MS_CHAST,
         MS_MEZHD,
         MS_PREDIC_MS,
+        MS_LAST_NAME,
         MS_END,
         MS_UNDEFINED
     };
@@ -92,6 +93,7 @@ namespace Hlib
         POS_PARTICLE,
         POS_INTERJ,         // межд.
         POS_PARENTH,        // вводн.
+        POS_LAST_NAME,
         POS_NULL,
         POS_COUNT
     };
@@ -140,11 +142,15 @@ namespace Hlib
     {
         SUBPARADIGM_UNDEFINED,
         SUBPARADIGM_NOUN,
+        SUBPARADIGM_LAST_NAME_NOUN,
+        SUBPARADIGM_LAST_NAME_NOUN_F,
         SUBPARADIGM_LONG_ADJ,
+        SUBPARADIGM_LAST_NAME_LONG_ADJ,
         SUBPARADIGM_SHORT_ADJ,
         SUBPARADIGM_COMPARATIVE,
         SUBPARADIGM_PRONOUN,
         SUBPARADIGM_PRONOUN_ADJ,
+        SUBPARADIGM_LAST_NAME_PRONOUN_ADJ,
         SUBPARADIGM_INFINITIVE,
         SUBPARADIGM_PRESENT_TENSE,
         SUBPARADIGM_PAST_TENSE,
