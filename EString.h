@@ -136,7 +136,7 @@ struct StEscape
 struct StVowels
 {
     const wchar_t * m_szDefault;
-    StVowels() : m_szDefault(L"аеёиоуыэюя") {}
+    StVowels() : m_szDefault(L"аеёиоуыэюяАЕЁИОУЫЭЮЯ") {}
 };
 
 struct StRegex
@@ -276,11 +276,11 @@ public:
 //    static constexpr wstring str_CyrillicLowercase = L"-абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
     static constexpr wchar_t g_szRusLowercase[] = L"абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
     static constexpr wchar_t g_szRusUppercase[] = L"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
-    static constexpr wchar_t g_szRusVowels[] = L"аеёиоуыэюя";
-    static constexpr wchar_t g_szRusConsonants[] = L"бвгджзйклмнпрстфхцчшщ";
-    static constexpr wchar_t g_szRusVoicedConsonants[] = L"бвгджзйлмнр";
-    static constexpr wchar_t g_szRusVoicelessConsonants[] = L"кпстфхцчшщ";
-    static constexpr wchar_t g_szRusHushers[] = L"жчшщ";
+    static constexpr wchar_t g_szRusVowels[] = L"аеёиоуыэюяАЕЁИОУЫЭЮЯ";
+    static constexpr wchar_t g_szRusConsonants[] = L"бвгджзйклмнпрстфхцчшщБВГДЖЗЙКЛМНПРСТФХЦЧШЩ";
+    static constexpr wchar_t g_szRusVoicedConsonants[] = L"бвгджзйлмнрБВГДЖЗЙЛМНР";
+    static constexpr wchar_t g_szRusVoicelessConsonants[] = L"кпстфхцчшщКПСТФХЦЧШЩ";
+    static constexpr wchar_t g_szRusHushers[] = L"жчшщЖЧШЩ";
 
     wchar_t static const g_chrCombiningAcuteAccent = u'\u0301';
     wchar_t static const g_chrCombiningGraveAccent = u'\u0300';
@@ -1546,7 +1546,7 @@ public:
     
     }   //  void Replace (...)
 
-    CEString sReplace(const wchar_t * szOld, wchar_t * szNew)
+    CEString sReplace(const wchar_t * szOld, const wchar_t * szNew)
     {
         if (0 == m_uiLength)
         {
