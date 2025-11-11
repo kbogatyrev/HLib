@@ -1,5 +1,5 @@
-#ifndef ST_LEXEME_HASHER_INCLUDED
-#define ST_LEXEME_HASHER_INCLUDED
+#ifndef ST_INFLECTION_HASHER_INCLUDED
+#define ST_INFLECTION_HASHER_INCLUDED
 
 #include <map>
 #include "SqliteWrapper.h"
@@ -8,7 +8,7 @@
 namespace Hlib
 {
 
-struct StLexemeHasher
+struct StInflectionHasher
 {
     map<int, ET_StressType> m_mapStress;
     CEString m_sSourceForm;
@@ -18,7 +18,7 @@ struct StLexemeHasher
     int m_iAccentType2;
     CEString m_sComment;
 
-    StLexemeHasher() : m_iInflectionType(-1), m_iAccentType1(-1), m_iAccentType2(-1)
+    StInflectionHasher() : m_iInflectionType(-1), m_iAccentType1(-1), m_iAccentType2(-1)
     {}
 
     CEString sHash()
@@ -56,7 +56,7 @@ struct StLexemeHasher
     {
         try
         {
-            pDbHandle->PrepareForInsert (L"lexeme_hash_to_descriptor", 3);
+            pDbHandle->PrepareForInsert (L"inflection_hash_to_descriptor", 3);
             pDbHandle->Bind (1, sHash());
             pDbHandle->Bind (2, llDescriptorId);
             pDbHandle->Bind (3, llInflectionId);
@@ -89,7 +89,7 @@ struct StLexemeHasher
     }   //  bool bSaveToDb (...)
 
 
-};  //  struct StLexemeHasher
+};  //  struct StInflectionHasher
 
 }   //  namespace Hlib
 
