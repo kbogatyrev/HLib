@@ -13,6 +13,7 @@
 #include <codecvt>
 #include <locale>
 #include <memory>
+#include <codecvt>
 
 #include <vector>
 #include <string>
@@ -61,7 +62,9 @@ namespace Hlib
         {
             string sLocation = string(pchrPath) + string("\t") + to_string(uiLine) + string("\t") + string(pchrFunction) + string("\t");
             auto wsDescription = wstring(const_cast<wchar_t*>(pwMsg));
-            auto sFormattedMsg = sFormat(sToNarrowString(wsDescription).c_str(), sLocation.c_str());
+            wstring_convert<codecvt_utf8<wchar_t>> converter;
+            const string sFormattedMsg = converter.to_bytes(wsDescription);
+//            auto sFormattedMsg = sFormat(sToNarrowString(wsDescription).c_str(), sLocation.c_str());
             cout << sFormattedMsg << endl;
         }
 
@@ -195,12 +198,12 @@ namespace Hlib
 
 #define MESSAGE_LOG(sMsg__) {\
     Hlib::CLogger * pErrorHandler__ = Hlib::CLogger::pGetInstance(); \
-        pErrorHandler__->LogWstr(__FILE__, __FUNCTION__, __LINE__, sMsg__); \
+        pErrorHandler__->LogUtf8(__FILE__, __FUNCTION__, __LINE__, sMsg__); \
 }
 
 #define ERROR_LOG(sMsg__) {\
     Hlib::CLogger * pErrorHandler__ = Hlib::CLogger::pGetInstance(); \
-        pErrorHandler__->LogWstr(__FILE__, __FUNCTION__, __LINE__, sMsg__); \
+        pErrorHandler__->LogUtf8(__FILE__, __FUNCTION__, __LINE__, sMsg__); \
 }
 
 #define ASSERT(bBoolExpr__) if (!(bBoolExpr__)) {\
