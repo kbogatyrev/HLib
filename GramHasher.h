@@ -7,38 +7,6 @@
 
 namespace Hlib
 {
-    /*
-    //static void operator++ (ET_MainSymbol& eo_ms)
-    //{
-    //    eo_ms = (ET_MainSymbol)(eo_ms + 1);
-    //}
-
-    static void operator++ (ET_Case& eC)
-    {
-    eC = (ET_Case)(eC + 1);
-    }
-
-    static void operator++ (ET_Number& eN)
-    {
-    eN = (ET_Number)(eN + 1);
-    }
-
-    static void operator++ (ET_Gender& eG)
-    {
-    eG = (ET_Gender)(eG + 1);
-    }
-
-    static void operator++ (ET_Animacy& eo_a)
-    {
-    eo_a = (ET_Animacy)(eo_a + 1);
-    }
-
-    static void operator++ (ET_Person& eo_p)
-    {
-    eo_p = (ET_Person)(eo_p + 1);
-    }
-    */
-
     //
     // Initializing static class members at file scope
     //
@@ -84,12 +52,16 @@ namespace Hlib
             { SUBPARADIGM_COMPARATIVE, L"AdjComp" },{ SUBPARADIGM_LONG_ADJ, L"AdjL" }, { SUBPARADIGM_SHORT_ADJ, L"AdjS" }, 
             { SUBPARADIGM_ADVERB, L"Adv" }, { SUBPARADIGM_ASPECT_PAIR, L"AspectPair" }, { SUBPARADIGM_CONJUNCTION, L"Conj" }, 
             { SUBPARADIGM_IMPERATIVE, L"Impv" }, { SUBPARADIGM_INFINITIVE, L"Inf" }, { SUBPARADIGM_INTERJECTION, L"Interj" }, 
-            { SUBPARADIGM_NOUN, L"Noun" }, { SUBPARADIGM_NUM_ADJ, L"NumAdj" }, { SUBPARADIGM_NUM_2TO4, L"Numeral24" }, { SUBPARADIGM_NUM, L"Numeral" },
-            { SUBPARADIGM_PARENTHESIS, L"Parenth" }, { SUBPARADIGM_PARTICLE, L"Particle" }, { SUBPARADIGM_PAST_TENSE, L"Past" },
-            { SUBPARADIGM_PART_PAST_ACT, L"PPastA" }, { SUBPARADIGM_PART_PAST_PASS_LONG, L"PPastPL" }, { SUBPARADIGM_PART_PAST_PASS_SHORT, L"PPastPS" },
-            { SUBPARADIGM_PREDICATIVE, L"Predic" }, { SUBPARADIGM_PREPOSITION, L"Prep" }, { SUBPARADIGM_PART_PRES_ACT, L"PPresA" }, 
-            { SUBPARADIGM_PART_PRES_PASS_LONG, L"PPresPL" }, { SUBPARADIGM_PART_PRES_PASS_SHORT, L"PPresPS" }, { SUBPARADIGM_PRESENT_TENSE, L"Pres" }, 
-            { SUBPARADIGM_PRONOUN_ADJ, L"PronAdj" }, { SUBPARADIGM_PRONOUN, L"Pronoun" }, { SUBPARADIGM_ADVERBIAL_PAST, L"VAdv_Past" }, 
+            { SUBPARADIGM_NOUN, L"Noun" }, { SUBPARADIGM_NUM_ADJ, L"NumAdj" }, { SUBPARADIGM_NUM_2TO4, L"Numeral24" }, 
+            { SUBPARADIGM_NUM, L"Numeral" }, { SUBPARADIGM_LAST_NAME_NOUN, L"LastNameNoun" }, { SUBPARADIGM_LAST_NAME_NOUN_F, L"LastNameNounFeminine" },
+            { SUBPARADIGM_LAST_NAME_LONG_ADJ, L"LastNameLongAdj" }, { SUBPARADIGM_LAST_NAME_PRONOUN_ADJ, L"LastNamePronAdj" }, 
+            { SUBPARADIGM_PARENTHESIS, L"Parenth" }, { SUBPARADIGM_PARTICLE, L"Particle" }, { SUBPARADIGM_PAST_TENSE, L"Past" }, 
+            { SUBPARADIGM_PART_PAST_ACT, L"PPastA" }, { SUBPARADIGM_PART_PAST_PASS_LONG, L"PPastPL" }, 
+            { SUBPARADIGM_PART_PAST_PASS_SHORT, L"PPastPS" }, { SUBPARADIGM_PREDICATIVE, L"Predic" }, 
+            { SUBPARADIGM_PREPOSITION, L"Prep" }, { SUBPARADIGM_PART_PRES_ACT, L"PPresA" }, 
+            { SUBPARADIGM_PART_PRES_PASS_LONG, L"PPresPL" }, { SUBPARADIGM_PART_PRES_PASS_SHORT, L"PPresPS" }, 
+            { SUBPARADIGM_PRESENT_TENSE, L"Pres" }, { SUBPARADIGM_PRONOUN_ADJ, L"PronAdj" }, 
+            { SUBPARADIGM_PRONOUN, L"Pronoun" }, { SUBPARADIGM_ADVERBIAL_PAST, L"VAdv_Past" }, 
             { SUBPARADIGM_ADVERBIAL_PRESENT, L"VAdv_Pres" }
         };
 
@@ -182,6 +154,25 @@ namespace Hlib
         }
 
         return sGender;
+    }
+
+    static CEString sAnimacyToStr(ET_Animacy eKey)
+    {
+        static const map<ET_Animacy, CEString> mapAnimacyToStr = { { ANIM_YES, L"Anim" }, { ANIM_NO, L"Inanim" }, { ANIM_UNDEFINED, L"" } };
+
+        CEString sAnimacy;
+        try
+        {
+            sAnimacy = mapAnimacyToStr.at(eKey);
+        }
+        catch (std::exception& ex)
+        {
+            CEString sMsg(L"Exception: ");
+            sMsg += CEString::sToString(ex.what());
+            ERROR_LOG(sMsg);
+        }
+
+        return sAnimacy;
     }
 
     static ET_Case eStrToCase(const CEString& sKey)
@@ -339,8 +330,8 @@ namespace Hlib
             m_eGender = GENDER_UNDEFINED;
             m_ePerson = PERSON_UNDEFINED;
             m_eAnimacy = ANIM_UNDEFINED;
-            m_eReflexivity = REFL_UNDEFINED;
             m_eAspect = ASPECT_UNDEFINED;
+            m_eReflexivity = REFL_UNDEFINED;
         }
 
         CGramInfo()
@@ -351,11 +342,6 @@ namespace Hlib
 
 class CGramHasher : public CGramInfo
 {
-    static const long MIN_NOUN = 0;
-    static const long MIN_ADJ = 10000;
-    static const long MIN_VERB = 60000;
-    static const long MIN_UNCHANGEABLE = 100000;
-
     enum etSubtype
     {
         ecSubtypeUndefined,
@@ -370,27 +356,6 @@ class CGramHasher : public CGramInfo
         ecTensePast,
         ecTenseFuture
     };
-
-
-//    static const map<CEString, ET_Subparadigm> m_mapStrToSubparadigm;
-//    static const map<ET_Subparadigm, CEString> m_mapSubparadigmToStr;
-
-//    static const map<CEString, ET_Number> m_mapStrToNumber;
-//    static const map<ET_Number, CEString> m_mapNumberToStr;
-
-//    static const map<CEString, ET_Gender> m_mapStrToGender;
-//    static const map<ET_Gender, CEString> m_mapGenderToStr;
-
-//    static const map<CEString, ET_Case> m_mapStrToCase;
-//    static const map<ET_Case, CEString> m_mapCaseToStr;
-
-//    static const map<CEString, ET_Animacy> m_mapStrToAnimacy;
-//    static const map<ET_Animacy, CEString> m_mapAnimacyToStr;
-
-//    static const map<CEString, ET_Person> m_mapStrToPerson;
-//    static const map<ET_Person, CEString> m_mapPersonToStr;
-
-//    static const map<ET_PartOfSpeech, CEString> m_mapPosToStr;
 
 public:
     CGramHasher()
@@ -506,6 +471,18 @@ public:
             sHash = sSubparadigmToStr(m_eSubparadigm) + L"_" + sNumberToStr(m_eNumber) + L"_" + sCaseToStr(m_eCase);
             break;
 
+        case SUBPARADIGM_LAST_NAME_NOUN:
+//            sHash = sSubparadigmToStr(m_eSubparadigm) + L"_" +  sNumberToStr(m_eNumber) + L"_" + sCaseToStr(m_eCase);
+            sHash = sSubparadigmToStr(m_eSubparadigm);
+            if (NUM_SG == m_eNumber)
+            {
+                sHash += L"_" + sGenderToStr(GENDER_M);
+            }
+            sHash += L"_" + sNumberToStr(m_eNumber);
+            sHash += L"_" + sCaseToStr(m_eCase);
+
+            break;
+
         case SUBPARADIGM_NUM:
         case SUBPARADIGM_NUM_2TO4:
             if (m_eGender != GENDER_UNDEFINED)
@@ -541,6 +518,21 @@ public:
             sHash += L"_" + sNumberToStr(m_eNumber);
             sHash += L"_" + sCaseToStr(m_eCase);
 
+            if (m_eCase == CASE_ACC && (m_eNumber == NUM_PL || GENDER_M == m_eGender))
+            {
+                sHash += L"_" + sAnimacyToStr(m_eAnimacy);
+            }
+            break;
+
+        case SUBPARADIGM_LAST_NAME_LONG_ADJ:
+        case SUBPARADIGM_LAST_NAME_PRONOUN_ADJ:
+            sHash = sSubparadigmToStr(m_eSubparadigm);
+            if (NUM_SG == m_eNumber)
+            {
+                sHash += L"_" + sGenderToStr(m_eGender);
+            }
+            sHash += L"_" + sNumberToStr(m_eNumber);
+            sHash += L"_" + sCaseToStr(m_eCase);
             break;
 
         case SUBPARADIGM_PAST_TENSE:
@@ -556,7 +548,6 @@ public:
             {
                 sHash += sGenderToStr(m_eGender);
             }
-
             break;
 
         case SUBPARADIGM_PRESENT_TENSE:
@@ -584,7 +575,6 @@ public:
  
     ET_ReturnCode eDecodeHash (const CEString& sHash)
     {
-//        int i_shift = 0;
         GramClear();
 
         CEString sSource(sHash);
@@ -1110,16 +1100,16 @@ public:
     } // eDecodeString()
 */
 
-    void Initialize (ET_Gender eo_init_gender, ET_Animacy eo_init_animacy)    // Nouns
+    void Initialize (ET_PartOfSpeech ePos, ET_Subparadigm eSp, ET_Gender eInitGender, ET_Animacy eInitAnimacy)    // Nouns
     {
         GramClear();
-        m_ePos = POS_NOUN;
-        m_eGender = eo_init_gender;
-        m_eAnimacy = eo_init_animacy;
-
+        m_ePos = ePos;
+        m_eSubparadigm = eSp;
+        m_eGender = eInitGender;
+        m_eAnimacy = eInitAnimacy;
         m_eCase = CASE_NOM;
         m_eNumber = NUM_SG;
-        m_eSubparadigm = SUBPARADIGM_NOUN;
+        m_eSubparadigm = eSp;
     }
 
     void Initialize (ET_Aspect eInitAspect, ET_Reflexivity eInitReflexive)    // Verbs
@@ -1134,15 +1124,27 @@ public:
         m_eNumber = NUM_SG;
     }
 
-    void Initialize (ET_PartOfSpeech eInitPos)    // Adjectives and adjectival pronouns
+    void Initialize (ET_PartOfSpeech eInitPos)    // Adjectives and adjectival pronouns or last names
     {
         GramClear();
-        m_ePos = eInitPos;   // POS_ADJ or POS_PRONOUN_ADJ
 
-        m_eSubparadigm = SUBPARADIGM_LONG_ADJ;
-        m_eGender = GENDER_M;
-        m_eCase = CASE_NOM;
-        m_eNumber = NUM_SG;
+        m_ePos = eInitPos; 
+
+        if (POS_LAST_NAME == eInitPos)
+        { 
+            m_eSubparadigm = SUBPARADIGM_LAST_NAME_LONG_ADJ;
+            m_eGender = GENDER_M;
+            m_eCase = CASE_NOM;
+            m_eNumber = NUM_SG;
+        }
+        else
+        {
+            // POS_ADJ or POS_PRONOUN_ADJ
+            m_eSubparadigm = SUBPARADIGM_LONG_ADJ;
+            m_eGender = GENDER_M;
+            m_eCase = CASE_NOM;
+            m_eNumber = NUM_SG;
+        }
     }
 
     void SetParadigm (ET_Subparadigm eInitSubparadigm)
@@ -1152,7 +1154,7 @@ public:
             return;  // The POS should be specified first
         }
         m_eSubparadigm = eInitSubparadigm;
-        if (m_ePos == POS_ADJ || m_ePos == POS_PRONOUN_ADJ)
+        if (m_ePos == POS_ADJ || m_ePos == POS_PRONOUN_ADJ || m_ePos == POS_NUM_ADJ)
         {
             m_eGender = GENDER_M;
             m_eCase = CASE_NOM;
@@ -1207,16 +1209,11 @@ public:
 
     bool bIncrement()
     {
-        if (m_ePos == POS_NOUN)
+        if (POS_NOUN == m_ePos)
         {
             ++m_eCase;
             if (m_eCase != CASE_COUNT)
             {
-//                if (m_eCase == CASE_PART || m_eCase == CASE_LOC || m_eCase == CASE_NUM)
-//                {
-//                    bool b_ = bIncrement();
-//                    return b_;
-//                }
                 return true;
             }
             else
@@ -1230,7 +1227,56 @@ public:
                 return false;
             }
         }
-        if (m_ePos == POS_ADJ || m_ePos == POS_PRONOUN_ADJ)
+
+        if (POS_LAST_NAME == m_ePos && SUBPARADIGM_LAST_NAME_NOUN == m_eSubparadigm)
+        {
+            ++m_eCase;
+            if (m_eCase != CASE_COUNT)
+            {
+                return true;
+            }
+            else
+            {
+                m_eCase = CASE_NOM;
+                ++m_eNumber;
+                if (m_eNumber != NUM_COUNT)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        if (POS_LAST_NAME == m_ePos &&
+            (SUBPARADIGM_LAST_NAME_LONG_ADJ == m_eSubparadigm
+            || SUBPARADIGM_LAST_NAME_PRONOUN_ADJ == m_eSubparadigm))
+        {
+            ++m_eCase;
+            if (m_eCase != CASE_COUNT)
+            {
+                return true;
+            }
+            else
+            {
+                m_eCase = CASE_NOM;
+                if (GENDER_M == m_eGender)
+                {
+                    ++m_eGender;
+                }
+                else
+                {
+                    m_eGender = GENDER_UNDEFINED;
+                    ++m_eNumber;
+                }
+                if (m_eNumber != NUM_COUNT)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        if (m_ePos == POS_ADJ || m_ePos == POS_PRONOUN_ADJ || m_ePos == POS_NUM_ADJ)
         {
             if (m_eSubparadigm == SUBPARADIGM_LONG_ADJ || m_eSubparadigm == SUBPARADIGM_PRONOUN_ADJ)
             {
