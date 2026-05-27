@@ -472,7 +472,6 @@ public:
             break;
 
         case SUBPARADIGM_LAST_NAME_NOUN:
-//            sHash = sSubparadigmToStr(m_eSubparadigm) + L"_" +  sNumberToStr(m_eNumber) + L"_" + sCaseToStr(m_eCase);
             sHash = sSubparadigmToStr(m_eSubparadigm);
             if (NUM_SG == m_eNumber)
             {
@@ -480,7 +479,16 @@ public:
             }
             sHash += L"_" + sNumberToStr(m_eNumber);
             sHash += L"_" + sCaseToStr(m_eCase);
+            break;
 
+        case SUBPARADIGM_LAST_NAME_NOUN_F:
+            sHash = sSubparadigmToStr(m_eSubparadigm);
+            if (NUM_SG == m_eNumber)
+            {
+                sHash += L"_" + sGenderToStr(GENDER_F);
+            }
+            sHash += L"_" + sNumberToStr(m_eNumber);
+            sHash += L"_" + sCaseToStr(m_eCase);
             break;
 
         case SUBPARADIGM_NUM:
@@ -1177,11 +1185,11 @@ public:
                 m_eCase = CASE_UNDEFINED;
             }
             else if (eInitSubparadigm == SUBPARADIGM_PART_PRES_ACT ||
-                     eInitSubparadigm == SUBPARADIGM_PART_PRES_PASS_LONG ||
-                     eInitSubparadigm == SUBPARADIGM_PART_PRES_PASS_SHORT ||
-                     eInitSubparadigm == SUBPARADIGM_PART_PAST_ACT ||
-                     eInitSubparadigm == SUBPARADIGM_PART_PAST_PASS_LONG ||
-                     eInitSubparadigm == SUBPARADIGM_PART_PAST_PASS_SHORT)
+                eInitSubparadigm == SUBPARADIGM_PART_PRES_PASS_LONG ||
+                eInitSubparadigm == SUBPARADIGM_PART_PRES_PASS_SHORT ||
+                eInitSubparadigm == SUBPARADIGM_PART_PAST_ACT ||
+                eInitSubparadigm == SUBPARADIGM_PART_PAST_PASS_LONG ||
+                eInitSubparadigm == SUBPARADIGM_PART_PAST_PASS_SHORT)
             {
                 m_ePerson = PERSON_UNDEFINED;
                 m_eNumber = NUM_SG;
@@ -1189,8 +1197,8 @@ public:
                 m_eCase = CASE_NOM;
             }
             else if (eInitSubparadigm == SUBPARADIGM_INFINITIVE ||
-                     eInitSubparadigm == SUBPARADIGM_ADVERBIAL_PRESENT ||
-                     eInitSubparadigm == SUBPARADIGM_ADVERBIAL_PAST)
+                eInitSubparadigm == SUBPARADIGM_ADVERBIAL_PRESENT ||
+                eInitSubparadigm == SUBPARADIGM_ADVERBIAL_PAST)
             {
                 m_ePerson = PERSON_UNDEFINED;
                 m_eNumber = NUM_UNDEFINED;
@@ -1244,6 +1252,15 @@ public:
                     return true;
                 }
                 return false;
+            }
+        }
+
+        if (POS_LAST_NAME == m_ePos && SUBPARADIGM_LAST_NAME_NOUN_F == m_eSubparadigm)
+        {
+            ++m_eCase;
+            if (m_eCase != CASE_COUNT)
+            {
+                return true;
             }
         }
 

@@ -301,10 +301,10 @@ namespace Hlib
 
     };
 
-//    enum ET_StemAugment
+//    enum ET_StemExtension
 //    {
-//        STEM_AUGMENT_UNDEFINED,
-//        STEM_AUGMENT_COUNT = 4
+//        STEM_EXTENSION_UNDEFINED,
+//        STEM_EXTENSION_COUNT = 4
 //    };
 
     enum ET_Status
