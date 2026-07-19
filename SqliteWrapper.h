@@ -2,6 +2,7 @@
 #define H_SQLITE_WRAPPER
 
 #include <memory>
+#include <cstring>
 #include <string>
 #include <sys/stat.h>
 
