@@ -261,7 +261,6 @@ namespace Hlib
         return sPerson;
     }
 
-
     static CEString sPosToStr(const ET_PartOfSpeech ePos)
     {
         static const map<ET_PartOfSpeech, CEString> mapPosToStr =
@@ -338,6 +337,8 @@ namespace Hlib
         {
             GramClear();
         }
+
+        virtual ~CGramInfo() {}
     };
 
 class CGramHasher : public CGramInfo
@@ -382,8 +383,8 @@ public:
                  ET_Person ePerson,
                  ET_Animacy eAnimacy,
                  ET_Aspect eAspect,
-                 ET_Reflexivity m_eReflexivity) :         
-        CGramInfo (ePos, eSubparadigm, eCase, eNumber, eGender, ePerson, eAnimacy, eAspect, m_eReflexivity)
+                 ET_Reflexivity eReflexivity) :
+        CGramInfo (ePos, eSubparadigm, eCase, eNumber, eGender, ePerson, eAnimacy, eAspect, eReflexivity)
     {}
 
     CGramHasher (ET_Subparadigm eSubparadigm,   // For verbs
@@ -393,8 +394,8 @@ public:
                  ET_Animacy eAnimacy,
                  ET_Aspect eAspect,
                  ET_Case eCase,
-                 ET_Reflexivity m_eReflexivity) :
-        CGramInfo (POS_VERB, eSubparadigm, eCase, eNumber, eGender, ePerson, eAnimacy, eAspect, m_eReflexivity)
+                 ET_Reflexivity eReflexivity) :
+        CGramInfo (POS_VERB, eSubparadigm, eCase, eNumber, eGender, ePerson, eAnimacy, eAspect, eReflexivity)
     {}
 
     CGramHasher (ET_Gender eGender,         // For nouns
@@ -573,7 +574,11 @@ public:
 
         default:
             assert(0);
-
+            {
+                ERROR_LOG(L"Unable to parse subparadigm.");
+                m_eSubparadigm = SUBPARADIGM_UNDEFINED;
+                sHash = L"";
+            }
         }       //  switch
 
         return sHash;
@@ -584,9 +589,7 @@ public:
     ET_ReturnCode eDecodeHash (const CEString& sHash)
     {
         GramClear();
-
         CEString sSource(sHash);
-
         try
         {
             sSource.ResetSeparators();
@@ -602,7 +605,6 @@ public:
             if (L"VAdv_Pres" == sSource)
             {
                 m_eSubparadigm = SUBPARADIGM_ADVERBIAL_PRESENT;
-
             }
             else if (L"VAdv_Past" == sSource)
             { 
@@ -630,7 +632,6 @@ public:
 
                     m_eNumber = eStrToNumber(sSource.sGetField(1));
                     m_eCase = eStrToCase(sSource.sGetField(2));
-
                     break;
                 }           // case SUBPARADIGM_NOUN
 
@@ -643,7 +644,7 @@ public:
                         m_eGender = eStrToGender(sSource.sGetField(1));
                         m_eCase = eStrToCase(sSource.sGetField(2));
                     }
-                    else
+                    else if (sSource.uiNFields() >= 2)
                     {
                         m_eCase = eStrToCase(sSource.sGetField(1));
                     }
@@ -666,7 +667,6 @@ public:
                             return ET_ReturnCode(H_ERROR_INVALID_ARG);
                         }
                     }
-
                     break;
                 }
 
@@ -680,6 +680,15 @@ public:
                 {
                     m_eNumber = NUM_UNDEFINED;
                     m_eGender = GENDER_UNDEFINED;
+
+                    if (sSource.uiNFields() < 3)
+                    {
+                        CEString sMsg(L"Unable to decode hash.");
+                        ERROR_LOG(sMsg + sSource);
+                        m_eSubparadigm = SUBPARADIGM_UNDEFINED;
+                        return ET_ReturnCode(H_ERROR_INVALID_ARG);
+                    }
+
                     if (L"Pl" == sSource.sGetField(1))
                     {
                         m_eNumber = NUM_PL;
@@ -687,14 +696,20 @@ public:
                     }
                     else
                     {
+                        if (sSource.uiNFields() < 4)
+                        {
+                            CEString sMsg(L"Unable to decode hash.");
+                            ERROR_LOG(sMsg + sSource);
+                            m_eSubparadigm = SUBPARADIGM_UNDEFINED;
+                            return ET_ReturnCode(H_ERROR_INVALID_ARG);
+                        }
+
                         m_eNumber = NUM_SG;
                         m_eGender = eStrToGender(sSource.sGetField(1));
                         m_eNumber = eStrToNumber(sSource.sGetField(2));
                         m_eCase = eStrToCase(sSource.sGetField(3));
                     }
-
                     break;
-
                 }           //  case SUBPARADIGM_LONG_ADJ
 
                 case SUBPARADIGM_PAST_TENSE:
@@ -702,6 +717,14 @@ public:
                 case SUBPARADIGM_PART_PRES_PASS_SHORT:
                 case SUBPARADIGM_PART_PAST_PASS_SHORT:
                 {
+                    if (sSource.uiNFields() < 2)
+                    {
+                        CEString sMsg(L"Unable to decode hash.");
+                        ERROR_LOG(sMsg + sSource);
+                        m_eSubparadigm = SUBPARADIGM_UNDEFINED;
+                        return ET_ReturnCode(H_ERROR_INVALID_ARG);
+                    }
+
                     m_eNumber = NUM_UNDEFINED;
                     m_eGender = GENDER_UNDEFINED;
                     if (L"Pl" == sSource.sGetField(1))
@@ -713,7 +736,6 @@ public:
                         m_eNumber = NUM_SG;
                         m_eGender = eStrToGender(sSource.sGetField(1));
                     }
-
                     break;
                 
                 }           //   case SUBPARADIGM_SHORT_ADJ etc
@@ -721,6 +743,13 @@ public:
                 case SUBPARADIGM_PRESENT_TENSE:
                 case SUBPARADIGM_IMPERATIVE:
                 {
+                    if (sSource.uiNFields() < 3)
+                    {
+                        CEString sMsg(L"Unable to decode hash.");
+                        ERROR_LOG(sMsg + sSource);
+                        m_eSubparadigm = SUBPARADIGM_UNDEFINED;
+                        return ET_ReturnCode(H_ERROR_INVALID_ARG);
+                    }
                     m_eNumber = eStrToNumber(sSource.sGetField(1));
                     m_ePerson = eStrToPerson(sSource.sGetField(2));
 
@@ -748,6 +777,7 @@ public:
                 {
                     CEString sMsg(L"Unknown subparadigm: ");
                     ERROR_LOG(sMsg + sHash);
+                    return ET_ReturnCode(H_ERROR_INVALID_ARG);
                 }
             }
         }
@@ -765,7 +795,6 @@ public:
             }
 
             ERROR_LOG(sMsg);
-
             return ET_ReturnCode(H_ERROR_INVALID_ARG);
         }
 
