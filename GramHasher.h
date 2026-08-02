@@ -431,32 +431,6 @@ public:
 
     CEString sGramHash()
     {
-/*
-        if ((POS_NOUN == m_ePos &&
-            (m_eSubparadigm != SUBPARADIGM_NOUN && m_eSubparadigm != SUBPARADIGM_UNDEFINED))
-            || ((POS_ADJ == m_ePos || POS_NUM_ADJ == m_ePos || POS_PRONOUN_ADJ == m_ePos) && 
-               (m_eSubparadigm != SUBPARADIGM_SHORT_ADJ &&
-                m_eSubparadigm != SUBPARADIGM_LONG_ADJ &&
-                m_eSubparadigm != SUBPARADIGM_COMPARATIVE &&
-                m_eSubparadigm != SUBPARADIGM_PRONOUN_ADJ))
-            || (POS_VERB  == m_ePos && (m_eSubparadigm != SUBPARADIGM_UNDEFINED
-                                && m_eSubparadigm != SUBPARADIGM_INFINITIVE
-                                && m_eSubparadigm != SUBPARADIGM_PAST_TENSE 
-                                && m_eSubparadigm != SUBPARADIGM_PRESENT_TENSE 
-                                && m_eSubparadigm != SUBPARADIGM_IMPERATIVE 
-                                && m_eSubparadigm != SUBPARADIGM_ADVERBIAL_PRESENT 
-                                && m_eSubparadigm != SUBPARADIGM_ADVERBIAL_PAST 
-                                && m_eSubparadigm != SUBPARADIGM_PART_PRES_ACT 
-                                && m_eSubparadigm != SUBPARADIGM_PART_PRES_PASS_LONG
-                                && m_eSubparadigm != SUBPARADIGM_PART_PRES_PASS_SHORT
-                                && m_eSubparadigm != SUBPARADIGM_PART_PAST_ACT 
-                                && m_eSubparadigm != SUBPARADIGM_PART_PAST_PASS_LONG
-                                && m_eSubparadigm != SUBPARADIGM_PART_PAST_PASS_SHORT)))
-        {
-            return L"";
-        }
-*/
-
         if (POS_UNDEFINED == m_ePos || POS_ADV == m_ePos || POS_PREPOSITION == m_ePos ||
             POS_CONJUNCTION == m_ePos || POS_PARTICLE == m_ePos || POS_COMPAR == m_ePos ||
             POS_PREDIC == m_ePos || POS_INTERJ == m_ePos || POS_PARENTH == m_ePos)
@@ -1011,15 +985,13 @@ public:
                     }
                 }
                 ++m_eCase;
+                while (m_eCase == CASE_PART || m_eCase == CASE_LOC || m_eCase == CASE_NUM)
+                {
+                    ++m_eCase;
+                }
                 if (m_eCase != CASE_COUNT)
                 {
-                    if (m_eCase == CASE_PART || m_eCase == CASE_LOC || m_eCase == CASE_NUM)
-                    {
-                        bool b_ = bIncrement();
-                        return b_;
-                    }
-                    if (m_eCase == CASE_ACC &&
-                        (m_eGender == GENDER_M ||  m_eNumber == NUM_PL))
+                    if (m_eCase == CASE_ACC && (m_eGender == GENDER_M || m_eNumber == NUM_PL))
                     {
                         m_eAnimacy = ANIM_NO;
                     }
@@ -1120,8 +1092,7 @@ public:
                 }
                 if (m_eCase != CASE_COUNT)
                 {
-                    if (m_eCase == CASE_ACC &&
-                        (m_eGender == GENDER_M || m_eNumber == NUM_PL))
+                    if (m_eCase == CASE_ACC && (m_eGender == GENDER_M || m_eNumber == NUM_PL))
                     {
                         m_eAnimacy = ANIM_NO;
                     }
