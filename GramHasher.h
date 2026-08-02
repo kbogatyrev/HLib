@@ -1430,9 +1430,7 @@ public:
                 m_eSubparadigm == SUBPARADIGM_PART_PRES_PASS_LONG ||
                 m_eSubparadigm == SUBPARADIGM_PART_PAST_PASS_LONG)
             {
-                if (m_eCase == CASE_ACC &&
-                        (m_eGender == GENDER_M || m_eNumber == NUM_PL))
-
+                if (m_eCase == CASE_ACC && (m_eGender == GENDER_M || m_eNumber == NUM_PL))
                 {
                     if (m_eAnimacy == ANIM_UNDEFINED)
                     {
@@ -1450,13 +1448,12 @@ public:
                     }
                 }
                 ++m_eCase;
+                while (m_eCase == CASE_PART || m_eCase == CASE_LOC || m_eCase == CASE_NUM)
+                {
+                    ++m_eCase;
+                }
                 if (m_eCase != CASE_COUNT)
                 {
-                    if (m_eCase == CASE_PART || m_eCase == CASE_LOC || m_eCase == CASE_NUM)
-                    {
-                        bool b_ = bIncrement();
-                        return b_;
-                    }
                     if (m_eCase == CASE_ACC &&
                         (m_eGender == GENDER_M || m_eNumber == NUM_PL))
                     {
