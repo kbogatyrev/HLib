@@ -471,19 +471,20 @@ public:
             if (m_eGender != GENDER_UNDEFINED)
             {
                 sHash = sSubparadigmToStr(m_eSubparadigm) + L"_" + sGenderToStr(m_eGender) + L"_" + sCaseToStr(m_eCase);
-                if (ANIM_NO == m_eAnimacy)
-                {
-                    sHash += L"_Inanim";
-                }
-                else if (ANIM_YES == m_eAnimacy)
-                {
-                    sHash += L"_Anim";
-                }
             }
             else
             {
                 sHash = sSubparadigmToStr(m_eSubparadigm) + L"_" + sCaseToStr(m_eCase);
             }
+            if (ANIM_NO == m_eAnimacy)
+            {
+                sHash += L"_Inanim";
+            }
+            else if (ANIM_YES == m_eAnimacy)
+            {
+                sHash += L"_Anim";
+            }
+
             break;
 
         case SUBPARADIGM_LONG_ADJ:
@@ -609,7 +610,6 @@ public:
                     break;
                 }           // case SUBPARADIGM_NOUN
 
-                case SUBPARADIGM_NUM:
                 case SUBPARADIGM_NUM_2TO4:
                 {
                     m_eGender = GENDER_UNDEFINED;
@@ -618,11 +618,6 @@ public:
                         m_eGender = eStrToGender(sSource.sGetField(1));
                         m_eCase = eStrToCase(sSource.sGetField(2));
                     }
-                    else if (sSource.uiNFields() >= 2)
-                    {
-                        m_eCase = eStrToCase(sSource.sGetField(1));
-                    }
-
                     if (sSource.uiNFields() >= 4)
                     {
                         if (sSource.sGetField(3) == L"Inanim")
@@ -640,6 +635,25 @@ public:
                             m_eSubparadigm = SUBPARADIGM_UNDEFINED;
                             return ET_ReturnCode(H_ERROR_INVALID_ARG);
                         }
+                    }
+                    break;
+                }
+                case SUBPARADIGM_NUM:
+                {
+                    if (sSource.uiNFields() >= 3)      // only "двое" and "трое"
+                    {
+                        if (sSource.sGetField(2) == L"Inanim")
+                        {
+                            m_eAnimacy = ANIM_NO;
+                        }
+                        else if (sSource.sGetField(2) == L"Anim")
+                        {
+                            m_eAnimacy = ANIM_YES;
+                        }
+                    }
+                    if (sSource.uiNFields() >= 2)
+                    {
+                        m_eCase = eStrToCase(sSource.sGetField(1));
                     }
                     break;
                 }
