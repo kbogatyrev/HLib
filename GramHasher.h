@@ -284,6 +284,124 @@ namespace Hlib
         return sPos;
     }
 
+    inline bool bAreHashesAligned(CEString sGramHashLeft, CEString sGramHashRight)
+    {
+        sGramHashLeft.SetBreakChars(L"_");
+        sGramHashRight.SetBreakChars(L"_");
+        bool bMatch = false;
+        auto nFieldsLeft = sGramHashLeft.uiGetNumOfFields();
+        auto nFieldsRight = sGramHashRight.uiGetNumOfFields();
+        if (L"AdjL" == sGramHashLeft.sGetField(0) && L"AdjL" == sGramHashRight.sGetField(0))
+        {
+            if (nFieldsLeft == 5 && nFieldsRight == 5)
+            {
+                if (sGramHashLeft.sGetField(nFieldsLeft - 1) == sGramHashRight.sGetField(nFieldsRight - 1) &&
+                    sGramHashLeft.sGetField(nFieldsLeft - 2) == sGramHashRight.sGetField(nFieldsRight - 2) &&
+                    sGramHashLeft.sGetField(nFieldsLeft - 3) == sGramHashRight.sGetField(nFieldsRight - 3) &&
+                    sGramHashLeft.sGetField(nFieldsLeft - 4) == sGramHashRight.sGetField(nFieldsRight - 4))
+                {
+                    bMatch = true;
+                }
+            }
+            else if (nFieldsLeft == 4 && nFieldsRight == 4)
+            {
+                if (sGramHashLeft.sGetField(nFieldsLeft - 1) == sGramHashRight.sGetField(nFieldsRight - 1) &&
+                    sGramHashLeft.sGetField(nFieldsLeft - 2) == sGramHashRight.sGetField(nFieldsRight - 2) &&
+                    sGramHashLeft.sGetField(nFieldsLeft - 3) == sGramHashRight.sGetField(nFieldsRight - 3))
+                {
+                    bMatch = true;
+                }
+            }
+            else if (nFieldsLeft == 3 && nFieldsRight == 3)
+            {
+                if (sGramHashLeft.sGetField(nFieldsLeft - 1) == sGramHashRight.sGetField(nFieldsRight - 1) &&
+                    sGramHashLeft.sGetField(nFieldsLeft - 2) == sGramHashRight.sGetField(nFieldsRight - 2))
+                {
+                    bMatch = true;
+                }
+            }
+        }
+        else if (L"AdjL" == sGramHashLeft.sGetField(0) && L"Noun" == sGramHashRight.sGetField(0))
+        {
+            // Noun hashes carry no animacy. The left lexeme only generates the accusative variant for its own
+            // animacy (м -> Inanim), so for an Inanim variant drop the animacy field and compare number + case.
+            auto nFieldsLeftEff = (L"Inanim" == sGramHashLeft.sGetField(nFieldsLeft - 1)) ? nFieldsLeft - 1 : nFieldsLeft;
+
+            if (nFieldsRight == 3 && nFieldsLeftEff >= 3)
+            {
+                if (sGramHashLeft.sGetField(nFieldsLeftEff - 1) == sGramHashRight.sGetField(nFieldsRight - 1) &&
+                    sGramHashLeft.sGetField(nFieldsLeftEff - 2) == sGramHashRight.sGetField(nFieldsRight - 2))
+                {
+                    bMatch = true;
+                }
+            }
+        }
+        else if (L"AdjS" == sGramHashLeft.sGetField(0))
+        {
+            if (nFieldsLeft != 2 || nFieldsRight != 2)
+            {
+                return false;
+            }
+            if (sGramHashLeft.sGetField(nFieldsLeft - 1) == sGramHashRight.sGetField(nFieldsRight - 1))
+            {
+                bMatch = true;
+            }
+        }
+        else if (L"AdjComp" == sGramHashLeft && L"AdjComp" == sGramHashRight)
+        {
+            bMatch = true;
+        }
+        else if (L"Noun" == sGramHashLeft.sGetField(0))
+        {
+            if (nFieldsLeft != 3 || nFieldsRight < 3)
+            {
+                return false;
+            }
+            if (sGramHashLeft.sGetField(nFieldsLeft - 1) == sGramHashRight.sGetField(nFieldsRight - 1) &&
+                sGramHashLeft.sGetField(nFieldsLeft - 2) == sGramHashRight.sGetField(nFieldsRight - 2))
+            {
+                bMatch = true;
+            }
+        }
+        else if (L"LastNamePronAdj" == sGramHashLeft.sGetField(0) || L"LastNameLongAdj" == sGramHashLeft.sGetField(0))
+        {
+            if (nFieldsLeft == 5 && nFieldsRight == 5)
+            {
+                if (sGramHashLeft.sGetField(nFieldsLeft - 1) == sGramHashRight.sGetField(nFieldsRight - 1) &&
+                    sGramHashLeft.sGetField(nFieldsLeft - 2) == sGramHashRight.sGetField(nFieldsRight - 2) &&
+                    sGramHashLeft.sGetField(nFieldsLeft - 3) == sGramHashRight.sGetField(nFieldsRight - 3) &&
+                    sGramHashLeft.sGetField(nFieldsLeft - 4) == sGramHashRight.sGetField(nFieldsRight - 4))
+                {
+                    bMatch = true;
+                }
+            }
+            else if (nFieldsLeft == 4 && nFieldsRight == 4)
+            {
+                if (sGramHashLeft.sGetField(nFieldsLeft - 1) == sGramHashRight.sGetField(nFieldsRight - 1) &&
+                    sGramHashLeft.sGetField(nFieldsLeft - 2) == sGramHashRight.sGetField(nFieldsRight - 2) &&
+                    sGramHashLeft.sGetField(nFieldsLeft - 3) == sGramHashRight.sGetField(nFieldsRight - 3))
+                {
+                    bMatch = true;
+                }
+            }
+            else if (nFieldsLeft == 3 && nFieldsRight == 3)
+            {
+                if (sGramHashLeft.sGetField(nFieldsLeft - 1) == sGramHashRight.sGetField(nFieldsRight - 1) &&
+                    sGramHashLeft.sGetField(nFieldsLeft - 2) == sGramHashRight.sGetField(nFieldsRight - 2))
+                {
+                    bMatch = true;
+                }
+            }
+        }
+        else
+        {
+            ERROR_LOG(L"Unsupported combination of gram hashes: " + sGramHashLeft + L", " + sGramHashRight);
+            return false;
+        }
+
+        return bMatch;
+    }
+
     class CGramInfo
     {
     public:
