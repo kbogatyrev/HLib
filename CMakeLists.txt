@@ -10,7 +10,7 @@ target_include_directories(HLib
 
 target_compile_features(HLib
 		INTERFACE
-		cxx_std_17)
+		cxx_std_20)
 
 option(HLIB_BUILD_TESTS "Build HLib tests" ON)
 
