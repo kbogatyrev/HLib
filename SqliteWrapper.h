@@ -128,10 +128,10 @@ namespace Hlib
             }
 
             int iRet = SQLITE_OK;
-            iRet = sqlite3_exec(m_spDb_.get(), "END TRANSACTION;", NULL, NULL, NULL);
+            iRet = sqlite3_exec(m_spDb_.get(), "ROLLBACK TRANSACTION;", NULL, NULL, NULL);
             if (SQLITE_OK != iRet)
             {
-                throw CException(iRet, L"sqlite3_prepare16_v2 failed");
+                throw CException(iRet, L"Rollback failed.");
             }
         }
 
